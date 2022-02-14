@@ -1,32 +1,83 @@
 % Data Sorting
 % Author: JDS
-% Updated: 2/11/2022
-% the purpose of this script is to go through the data exported from Spike2
-% and put them in the proper format for analysis
+% Updated: 2/14/2022
+% The purpose of this script is to go through the data exported from Spike2
+% and put them in the proper format for analysis.
+% The code is currently written for animal A100401-22-91. Code may need to
+% be adjusted according to individual animals.
 clear
 clc
+close all
 % Load data files
-source = '\\cosmic.bme.emory.edu\labs\ting\shared_ting\Jake\Spindle_Grant\RawData';
+source = 'C:\\Users\Jake\Documents\Spindle_Grant\RawData';
 
 D = dir(source);
 D = D(3:end);
 
-for ii = 1% :numel(D)
+% keys to pair variable names with channel numbers
+ckeys = {'Vm', 'Ch2'; 
+    'Fmt', 'Ch3'; 
+    'Lmt', 'Ch4'; 
+    'ramptrig', 'Ch7'; 
+    'Lf', 'Ch9'};
+%%
+for ii = 1:numel(D)
     data = load([D(ii).folder filesep D(ii).name]);
-    if length(fieldnames(data)) ~= 6
-        disp(D(ii).name)
-    end
-    % unpack data to recdata structure
-    recdata.Fmt.times = data.motor_F.times;
-    recdata.Fmt.values = data.motor_F.values;
-    recdata.Lmt.times = data.motor_L.times;
-    recdata.Lmt.values = data.motor_L.values;
-    recdata.Lf.times = data.sonos.times;
-    recdata.Lf.values = data.sonos.values;
-    recdata.spiketimes = data.Memory.times;
-    recdata.startTime = data.ramptrig.times;
-    recdata.srateHz = 1/data.Fmt.interval;
     
+    % get channel names
+    cnames = fieldnames(data);
+    % get channel numbers
+    cnums = zeros(1, length(cnames));
+    for jj = 1:numel(cnums)
+        % convert channel number in the title to an actual numerical value
+        cnums(jj) = str2double(cnames{jj}(3:end));
+    end
+    
+    % NUMERICAL DATA EXTRACTION
+    affcount = 1;
+    for kk = 1:numel(cnames)
+        if cnums(kk) > 10
+            % channels numbered > 10 correspond to spiketimes
+            % if the number is > 10, assign to an afferent variable
+            % affcount will increase each iteration so if another aff
+            % channel is encountered, it will assign it to a variable
+            % 'aff2'
+            recdata.(['aff' num2str(affcount)]).times = data.(cnames{kk}).times;
+            affcount = affcount + 1;
+        else
+            % find the variable name corresponding to the channel name from
+            % the keys cell
+            [row, ~] = find(strcmp(ckeys, cnames{kk}) == 1);
+            % if the current channel is the ramp trigger channel
+            if strcmp(ckeys{row, 1}, 'ramptrig')
+                recdata.(ckeys{row, 1}).time = data.(cnames{kk}).times;
+            else
+                recdata.(ckeys{row, 1}).values = data.(cnames{kk}).values;
+                recdata.(ckeys{row, 1}).times = data.(cnames{kk}).times;
+            end
+        end
+    end
+    
+%     IFR1 = 1./(recdata.aff1.times(2:end) - recdata.aff1.times(1:end-1));
+%     if isfield(recdata, 'aff2')
+%         IFR2 = 1./(recdata.aff2.times(2:end) - recdata.aff2.times(1:end-1));
+%     end
+%     
+%     figure
+%     subplot(511)
+%     plot(recdata.Lmt.times, recdata.Lmt.values)
+%     subplot(512)
+%     plot(recdata.Lf.times, recdata.Lf.values)
+%     subplot(513)
+%     plot(recdata.Fmt.times, recdata.Fmt.values)
+%     subplot(514)
+%     plot(recdata.aff1.times(1:end-1), IFR1, '.k')
+%     if isfield(recdata, 'aff2')
+%         subplot(515)
+%         plot(recdata.aff2.times(1:end-1), IFR2, '.k')
+%     end
+    
+    % PARAMETER EXTRACTING
     expName = D(ii).name;
     % use spaces to get parameters from title
     stops = find(expName == ' ');
@@ -39,6 +90,18 @@ for ii = 1% :numel(D)
     parameters.cell = cellstr(2:end-1);
     parameters.freq = str2double(fstr(find(fstr == '_') + 1:end - 1));
     parameters.amp = str2double(astr(find(astr == '_') + 1:strfind(astr, '.smrx') - 1));
+    
+    if strcmp(parameters.cell, '1') || strcmp(parameters.cell, '1a')
+        if length(recdata.aff1.times) > length(recdata.aff2.times)
+            parameters.aff1type = 'II';
+            parameters.aff2type = 'Ib';
+        else
+            parameters.aff1type = 'Ib';
+            parameters.aff2type = 'II';
+        end
+    else
+        parameters.aff1type = 'Ia';
+    end
     
     folderName = ratIDstr;
     saveName = ['exp' num2str(ii) '.mat'];
