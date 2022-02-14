@@ -5,7 +5,7 @@ FilePathSet("", 0, "Set Directory"); ' choose the directory of files you want to
 ExportFile();
 
 Proc ExportFile()
-var f$, n%, i%, folderName$, saveName$;
+var f$, n%, i%, folderName$, saveName$, FileID%;
 folderName$ := "C:\\Users\\Jake\\Documents\\Spindle_Grant\\RawData\\"; ' set destination to save files
 n% := FileList(f$, 0); ' get number of .smrx files
 var fName$[n%];
@@ -15,8 +15,9 @@ for i% := 0 to n% - 1 do
     FileID% := FileOpen(fName$[i%], 0, 3); ' open file
     ExportChanList(1); ' get channels to export
     ExportChanList(0, MaxTime(), -1); ' export all channels over total time range
+    'export without channel names because when there's two Memory channels they overwrite each other
     FileSaveAs(saveName$,100,0,"",0, 
-    "UseSName=0|UseCName=1|WaveTimes=1|BinFreq=0|BinTimes=0|WaveData=2|MarkAs=0|TMarkAs=0|RMarkAs=2|RMarkData=2|WaveMarkAs=2|WaveMarkData=2|Compat=0|WaveAll=1|WaveSameN=0"); 'Export (string args)
+    "UseSName=0|UseCName=0|WaveTimes=1|BinFreq=0|BinTimes=0|WaveData=2|MarkAs=0|TMarkAs=0|RMarkAs=2|RMarkData=2|WaveMarkAs=2|WaveMarkData=2|Compat=0|WaveAll=1|WaveSameN=0"); 'Export (string args)
     FileClose(0)
     next;
 end;
