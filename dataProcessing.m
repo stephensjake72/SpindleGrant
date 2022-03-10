@@ -9,106 +9,109 @@ close all
 addpath(genpath('Functions'));
 
 % load data
-destination = uigetdir();
+destination = uigetdir('\\cosmic.bme.emory.edu\labs\ting\shared_ting\Jake\Spindle_Grant');
 D = dir(destination);
 D = D(3:end);
 %%
 % loop through experiment files
-ii = 1;
-% for ii = 1:numel(D)
+for ii = 1:numel(D)
+    disp(ii)
     data = load([D(ii).folder filesep D(ii).name]);
-%%    
-    % load time series data vectors
-    Lf = data.recdata.Lf;
-    Lmt = data.recdata.Lmt;
-    Fmt = data.recdata.Fmt;
-    time = data.recdata.time;
-    st = data.recdata.spiketimes;
-    IFR = data.recdata.IFR;
     
-    % calculate sampling frequency
-    fs = length(time)/max(time);
+    % downsampling factor
+    dsf = 20;
+    
+    % load downsampled data
+    Lf = data.recdata.Lf(1:dsf:end);
+    Lmt = data.recdata.Lmt(1:dsf:end);
+    Fmt = data.recdata.Fmt(1:dsf:end);
+    time = data.recdata.time(1:dsf:end);
+    
+    % lowpass filter
+    fs = 1/(time(2) - time(1));
+    cutoff = 50;
+    Lf = lowpass(Lf, cutoff, fs);
+    Lmt = lowpass(Lmt, cutoff, fs);
+    Fmt = lowpass(Fmt, cutoff, fs);
+    
+    % smooth and get first derivatives with savitsky-golay filter
+    fOrder = 6;
+    Width = 101;
+    [Lf, vf, ~] = sgolaydiff(Lf, fOrder, Width);
+    [Lmt, vmt, ~] = sgolaydiff(Lmt, fOrder, Width);
+    [Fmt, yank, ~] = sgolaydiff(Fmt, fOrder, Width);
+    
+    % smooth and get second derivatives
+    [vf, af, ~] = sgolaydiff(vf, fOrder, Width);
+    [vmt, amt, ~] = sgolaydiff(vmt, fOrder, Width);
+    [yank, ~, ~] = sgolaydiff(yank, fOrder, Width);
+    
+    % create logical vector to keep real values and exclude nans created by
+    % smoothing
+    keep = ~isnan(af);
+    
+    Lf = Lf(keep);
+    Lmt = Lmt(keep);
+    Fmt = Fmt(keep);
+    time = time(keep);
+    vf = vf(keep);
+    vmt = vmt(keep);
+    yank = yank(keep);
+    af = af(keep);
+    amt = amt(keep);
+    
+    % subplot(331)
+    % plot(time, Lf)
+    % subplot(332)
+    % plot(time, Lmt)
+    % subplot(333)
+    % plot(time, Fmt)
+    % subplot(334)
+    % plot(time, vf)
+    % subplot(335)
+    % plot(time, vmt)
+    % subplot(336)
+    % plot(time, yank)
+    % subplot(337)
+    % plot(time, af)
+    % subplot(338)
+    % plot(time, amt)
 
-    % apply a Savitsky-Golay filter to filter and take derivatives
-%     N = 4;
-%     F = 201;
-%     [Lf, vf, af] = sgolaydiff(Lf, N, F);
-%     [Lmt, vmt, amt] = sgolaydiff(Lmt, N, F);
-%     [Fmt, ymt, yymt] = sgolaydiff(Fmt, N, F);
-
-    % sgolaydiff doesn't account for time, so multiply by fs to get
-    % d/dt
-%     vf = vf*fs;
-%     af = af*fs^2;
-%     vmt = vmt*fs;
-%     amt = amt*fs^2;
-%     ymt = ymt*fs;
-
-    % trim NaNs left from filtering
-%     win = floor(F/2);
-%     Lf = Lf(win+1:end-win-1);
-%     Lmt = Lmt(win+1:end-win-1);
-%     Fmt = Fmt(win+1:end-win-1);
-%     act = act(win+1:end-win-1);
-%     vf = vf(win+1:end-win-1);
-%     af = af(win+1:end-win-1);
-%     vmt = vmt(win+1:end-win-1);
-%     amt = amt(win+1:end-win-1);
-%     ymt = ymt(win+1:end-win-1);
-%     time = time(win+1:end-win-1);
-
+    procdata.Lf = Lf;
+    procdata.Lmt = Lmt;
+    procdata.Fmt = Fmt;
+    procdata.vf = vf;
+    procdata.vmt = vmt;
+    procdata.yank = yank;
+    procdata.af = af;
+    procdata.amt = amt;
+    procdata.time = time;
+    procdata.aff1.times = data.recdata.aff1.times;
+    procdata.aff1.IFR = 1./(data.recdata.aff1.times(2:end) - data.recdata.aff1.times(1:end - 1));
+    if isfield(data.recdata, 'aff2')
+        if ~isempty(data.recdata.aff2.times)
+            procdata.aff2.IFR = 1./(data.recdata.aff2.times(2:end) - data.recdata.aff2.times(1:end - 1));
+            procdata.aff2.times = data.recdata.aff2.times;
+        end
+    end
+    
+    save([D(ii).folder filesep D(ii).name], 'procdata', '-append')
+    
     % plot for sanity check
-%         lims = [0 3];
-%         F = figure('Position', [0 0 1000 1000]);
-%         subplot(3, 3, 1)
-%         plot(time, Lf)
-%         xlim(lims)
-%         title('fascicle')
-%         subplot(3, 3, 4)
-%         plot(time, vf)
-%         xlim(lims)
-%         subplot(3, 3, 7)
-%         plot(time, af)
-%         xlim(lims)
-%         subplot(3, 3, 2)
-%         plot(time, Lmt)
-%         xlim(lims)
-%         title('MTU')
-%         subplot(3, 3, 5)
-%         plot(time, vmt)
-%         xlim(lims)
-%         subplot(3, 3, 8)
-%         plot(time, amt)
-%         xlim(lims)
-%         subplot(3, 3, 3)
-%         plot(time, Fmt)
-%         title('force')
-%         xlim(lims)
-%         subplot(3, 3, 6)
-%         plot(time, ymt)
-%         xlim(lims)
-
-    % save processed data as a structure
-%     procdata.Lf = Lf;
-%     procdata.Lmt = Lmt;
-%     procdata.Fmt = Fmt;
-%     procdata.act = act;
-%     procdata.vf = vf;
-%     procdata.af = af;
-%     procdata.vmt = vmt;
-%     procdata.amt = amt;
-%     procdata.ymt = ymt;
-%     procdata.time = time;
-
-    % spiketime and IFR sorting
-%     st = st(1:end - 1);
-%     IFR = IFR(st > min(time) & st < max(time));
-%     st = st(st > min(time) & st < max(time));
-% 
-%     procdata.spiketimes = st;
-%     procdata.IFR = IFR;
-
-    % append procdata structure to existing .mat file
-%    save([exps(ii).folder filesep exps(ii).name], 'procdata', '-append')
-    % saveas(F, [figuredestination filesep name '.jpg'])
-% end
+    figure
+    subplot(511)
+    plot(time, procdata.Lmt)
+    subplot(512)
+    plot(time, procdata.Lf)
+    subplot(513)
+    plot(time, procdata.Fmt)
+    if isfield(procdata, 'aff1')
+        subplot(514)
+        plot(procdata.aff1.times(1:end-1), procdata.aff1.IFR, '.k')
+    end
+    if isfield(procdata, 'aff2')
+        subplot(515)
+        plot(procdata.aff2.times(1:end-1), procdata.aff2.IFR, '.k')
+    end
+    clear procdata
+end

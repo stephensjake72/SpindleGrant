@@ -20,8 +20,9 @@ ckeys = {'Vm', 'Ch2';
     'Lmt', 'Ch4'; 
     'ramptrig', 'Ch7'; 
     'Lf', 'Ch9'};
-%%
+
 for ii = 1:numel(D)
+    disp(ii)
     data = load([D(ii).folder filesep D(ii).name]);
     
     % get channel names
@@ -50,32 +51,13 @@ for ii = 1:numel(D)
             [row, ~] = find(strcmp(ckeys, cnames{kk}) == 1);
             % if the current channel is the ramp trigger channel
             if strcmp(ckeys{row, 1}, 'ramptrig')
-                recdata.(ckeys{row, 1}).time = data.(cnames{kk}).times;
+                parameters.(ckeys{row, 1}).time = data.(cnames{kk}).times;
             else
-                recdata.(ckeys{row, 1}).values = data.(cnames{kk}).values;
-                recdata.(ckeys{row, 1}).times = data.(cnames{kk}).times;
+                recdata.(ckeys{row, 1}) = data.(cnames{kk}).values;
             end
         end
     end
-    
-%     IFR1 = 1./(recdata.aff1.times(2:end) - recdata.aff1.times(1:end-1));
-%     if isfield(recdata, 'aff2')
-%         IFR2 = 1./(recdata.aff2.times(2:end) - recdata.aff2.times(1:end-1));
-%     end
-%     
-%     figure
-%     subplot(511)
-%     plot(recdata.Lmt.times, recdata.Lmt.values)
-%     subplot(512)
-%     plot(recdata.Lf.times, recdata.Lf.values)
-%     subplot(513)
-%     plot(recdata.Fmt.times, recdata.Fmt.values)
-%     subplot(514)
-%     plot(recdata.aff1.times(1:end-1), IFR1, '.k')
-%     if isfield(recdata, 'aff2')
-%         subplot(515)
-%         plot(recdata.aff2.times(1:end-1), IFR2, '.k')
-%     end
+    recdata.time = (1:length(recdata.Vm))*data.Ch2.interval - data.Ch2.interval;
     
     % PARAMETER EXTRACTING
     expName = D(ii).name;
@@ -113,4 +95,5 @@ for ii = 1:numel(D)
         mkdir([saveDir filesep folderName])
     end
     save([saveDir filesep folderName filesep saveName], 'recdata', 'parameters')
+    clear recdata
 end
