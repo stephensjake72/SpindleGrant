@@ -26,6 +26,7 @@ for jj = 1:numel(fields)
     if isempty(strfind(fields{jj}, 'aff')) % check if substruct isn't an afferent
         for kk = 1:numel(peaktimes)
             [amps(kk), locs(kk)] = max(numdata(data.procdata.time > troughtimes(kk) & data.procdata.time < troughtimes(kk + 1)));
+            amps(kk) = amps(kk) - numdata(1);
             locs(kk) = locs(kk) + troughlocs(kk);
         end
         peaks.(fields{jj}).vals = amps;

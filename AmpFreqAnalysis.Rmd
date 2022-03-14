@@ -1,0 +1,171 @@
+---
+title: "FreqAmp"
+author: "JDS"
+date: "March 8, 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggpubr)
+library(grid)
+library(gridExtra)
+library(plot3D)
+```
+
+```{r, include = F}
+data = read.csv('C:/Users/Jake/Documents/Data/AmpFreq.csv')
+data = data[data$Aff1type == 'Ia' ,]
+unID = rep('str', dim(data)[1])
+for (i in 1:dim(data)[1]){
+  unID[i] = paste("Cell", data[i, 'Cell'], "f", data[i, "Freq"])
+}
+data = cbind(data, unID)
+```
+
+```{r}
+grouping = unID
+iba_amp = ggplot(data, aes(x = Amp,
+                 y = Aff1_ib,
+                 color = Cell, 
+                 group = grouping)) +
+  geom_point(aes(color = Cell)) +
+  geom_line(aes(color = Cell)) +
+  xlab("Amplitude") +
+  ylab("Initial Burst")
+
+mifr_amp = ggplot(data, aes(x = Amp,
+                 y = Aff1_s,
+                 color = Cell, 
+                 group = grouping)) +
+  geom_point(aes(color = Cell)) +
+  geom_line(aes(color = Cell)) +
+  xlab("Amplitude") +
+  ylab("Avg. St. State Peak FR")
+
+ggarrange(iba_amp, mifr_amp, nrow = 1, common.legend = T)
+```
+
+```{r}
+iF_amp = ggplot(data, aes(x = Amp,
+                 y = Fmt_init,
+                 color = unID, 
+                 group = unID)) +
+  geom_point(aes(color = unID)) +
+  geom_line(aes(color = unID)) +
+  xlab("Amplitude") +
+  ylab("Initial Peak Force")
+
+mF_amp = ggplot(data, aes(x = Amp,
+                 y = Fmt_s,
+                 color = factor(Freq), 
+                 group = unID)) +
+  geom_point(aes(color = factor(Freq))) +
+  geom_line(aes(color = factor(Freq))) +
+  xlab("Amplitude") +
+  ylab("Avg. S.State Peak Force")
+
+ggarrange(iF_amp, mF_amp, nrow = 1, common.legend = T)
+```
+
+```{r}
+iLf_amp = ggplot(data, aes(x = Amp,
+                 y = Lf_init,
+                 color = factor(Freq), 
+                 group = unID)) +
+  geom_point(aes(color = factor(Freq))) +
+  geom_line(aes(color = factor(Freq))) +
+  xlab("Amplitude") +
+  ylab("Initial Fas. Stretch")
+
+mLf_amp = ggplot(data, aes(x = Amp,
+                 y = Lf_s,
+                 color = factor(Freq), 
+                 group = unID)) +
+  geom_point(aes(color = factor(Freq))) +
+  geom_line(aes(color = factor(Freq))) +
+  xlab("Amplitude") +
+  ylab("Avg. S.State Peak Fas. Stretch")
+
+ggarrange(iLf_amp, mLf_amp, nrow = 1, common.legend = T)
+```
+
+```{r}
+iFR_iLf = ggplot(data, aes(x = Lf_init,
+                 y = Aff1_ib,
+                 color = factor(Freq), 
+                 group = unID)) +
+  geom_point(aes(color = factor(Freq))) +
+  geom_line(aes(color = factor(Freq))) +
+  xlab("Initial Fas. Stretch") +
+  ylab("Initial Burst")
+
+mFR_mLf = ggplot(data, aes(x = Lf_s,
+                 y = Aff1_s,
+                 color = factor(Freq), 
+                 group = unID)) +
+  geom_point(aes(color = factor(Freq))) +
+  geom_line(aes(color = factor(Freq))) +
+  xlab("Avg. S.State Peak Fas. Stretch") +
+  ylab("Avg. S.State Peak FR")
+
+ggarrange(iFR_iLf, mFR_mLf, nrow = 1, common.legend = T)
+```
+
+
+```{r}
+iF_iLf = ggplot(data, aes(x = Lf_init,
+                 y = Fmt_init,
+                 color = factor(Freq), 
+                 group = unID)) +
+  geom_point(aes(color = factor(Freq))) +
+  geom_line(aes(color = factor(Freq))) +
+  xlab("Initial Fas. Stretch") +
+  ylab("Initial Force")
+
+mF_mLf = ggplot(data, aes(x = Lf_s,
+                 y = Fmt_s,
+                 color = factor(Freq), 
+                 group = unID)) +
+  geom_point(aes(color = factor(Freq))) +
+  geom_line(aes(color = factor(Freq))) +
+  xlab("Avg. S.State Peak Fas. Stretch") +
+  ylab("Avg. S.State Peak Force")
+
+ggarrange(iF_iLf, mF_mLf, nrow = 1, common.legend = T)
+```
+
+```{r}
+IBAplot = scatter3D(x = data$Freq,
+                    y = data$Amp, 
+                    z = data$Aff1_ib,
+                    xlab = "Freq",
+                    ylab = "Amp",
+                    zlab = "IBA",
+                    phi = 20,
+                    theta = -45,
+                    type = 'h',
+                    ticktype = "simple",
+                    bty = "g",
+                    pch = 19,
+                    cex = 1.5)
+ssFRplot = scatter3D(x = data$Freq,
+                    y = data$Amp, 
+                    z = data$Aff1_s,
+                    xlab = "Freq",
+                    ylab = "Amp",
+                    zlab = "S.S. FR",
+                    phi = 20,
+                    theta = -45,
+                    type = 'h',
+                    ticktype = "simple",
+                    bty = "g",
+                    pch = 19,
+                    cex = 1.5)
+
+# Error in match.arg(bty) : 'arg' should be one of “b”, “b2”, “f”, “g”, “bl”, “bl2”, “u”, “n”
+IBAplot
+ssFRplot
+```
+
+
