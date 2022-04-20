@@ -9,7 +9,7 @@ clear
 clc
 close all
 % Load data files
-source = 'C:\\Users\Jake\Documents\Spindle_Grant\RawData';
+source = 'C:\\Users\Jake\Documents\Spindle_Grant\RawData\A100401-22-119';
 
 D = dir(source);
 D = D(3:end);
@@ -20,7 +20,7 @@ ckeys = {'Vm', 'Ch2';
     'Lmt', 'Ch4'; 
     'ramptrig', 'Ch7'; 
     'Lf', 'Ch9'};
-
+%%
 for ii = 1:numel(D)
     disp(ii)
     data = load([D(ii).folder filesep D(ii).name]);
@@ -37,7 +37,7 @@ for ii = 1:numel(D)
     % NUMERICAL DATA EXTRACTION
     affcount = 1;
     for kk = 1:numel(cnames)
-        if cnums(kk) > 10
+        if cnums(kk) >= 11 && cnums(kk) < 30
             % channels numbered > 10 correspond to spiketimes
             % if the number is > 10, assign to an afferent variable
             % affcount will increase each iteration so if another aff
@@ -49,6 +49,9 @@ for ii = 1:numel(D)
             % find the variable name corresponding to the channel name from
             % the keys cell
             [row, ~] = find(strcmp(ckeys, cnames{kk}) == 1);
+            if isempty(row)
+                continue
+            end
             % if the current channel is the ramp trigger channel
             if strcmp(ckeys{row, 1}, 'ramptrig')
                 parameters.(ckeys{row, 1}).time = data.(cnames{kk}).times;
@@ -58,6 +61,7 @@ for ii = 1:numel(D)
         end
     end
     recdata.time = (1:length(recdata.Vm))*data.Ch2.interval - data.Ch2.interval;
+    recdata.time = recdata.time';
     
     % PARAMETER EXTRACTING
     expName = D(ii).name;
@@ -65,26 +69,26 @@ for ii = 1:numel(D)
     stops = find(expName == ' ');
     ratIDstr = expName(1:stops(1) - 1);
     cellstr = expName(stops(2):stops(3));
-    fstr = expName(stops(3):stops(4));
-    astr = expName(stops(4):end);
+    fstr = expName(stops(4):stops(5));
+    astr = expName(stops(6):strfind(expName, '.smrx'));
     % separate string chunks to get numerical values
     parameters.ID = ratIDstr(1:end);
-    parameters.cell = cellstr(2:end-1);
-    parameters.freq = str2double(fstr(find(fstr == '_') + 1:end - 1));
-    parameters.amp = str2double(astr(find(astr == '_') + 1:strfind(astr, '.smrx') - 1));
-    
-    if strcmp(parameters.cell, '1') || strcmp(parameters.cell, '1a')
-        if length(recdata.aff1.times) > length(recdata.aff2.times)
-            parameters.aff1type = 'II';
-            parameters.aff2type = 'Ib';
-        else
-            parameters.aff1type = 'Ib';
-            parameters.aff2type = 'II';
-        end
-    else
-        parameters.aff1type = 'Ia';
-    end
-    
+    parameters.cell = str2double(cellstr(2:end-1));
+    parameters.freq = str2double(fstr(2:end-1));
+    parameters.amp = str2double(astr(2:end-1));
+    parameters.aff1type = 'Ia';
+%     if strcmp(parameters.cell, '1') || strcmp(parameters.cell, '1a')
+%         if length(recdata.aff1.times) > length(recdata.aff2.times)
+%             parameters.aff1type = 'II';
+%             parameters.aff2type = 'Ib';
+%         else
+%             parameters.aff1type = 'Ib';
+%             parameters.aff2type = 'II';
+%         end
+%     else
+%         parameters.aff1type = 'Ia';
+%     end
+%     
     folderName = ratIDstr;
     saveName = ['exp' num2str(ii) '.mat'];
     saveDir = '\\cosmic.bme.emory.edu\labs\ting\shared_ting\Jake\Spindle_Grant\Data';
