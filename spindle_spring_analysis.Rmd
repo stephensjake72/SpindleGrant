@@ -1,0 +1,131 @@
+---
+title: "JDS_spindle_spring_analysis"
+author: "JDS"
+date: "2022-10-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggpubr)
+library(grid)
+library(gridExtra)
+library(ggbeeswarm)
+library(knitr)
+library(kableExtra)
+library(lmerTest)
+library(psych)
+library(sjPlot)
+library(rstatix)
+source('~/GitHub/SpindleSpringProject/functions.R')
+```
+
+##Parse data frames
+```{r}
+df = read.csv('C://Users/Jake/Documents/Data/SpindleSpringSummary.csv')
+
+#global filters
+df <- subset(df, df$badtrial == 0) # ignore bad trials
+df <- subset(df, df$KT != 'A' & df$KT != 'B') # only take ctrl and group C for SEE
+df$KT = factor(df$KT, levels = c("T", "C")) # set KT as a factor to make analysis easier later on
+
+# create unique cell vector
+unID = df$address
+df <- cbind(df, unID)
+for (i in 1:dim(df)[1]){
+  df$unID[i] = paste(df$animal[i], df$cell[i], sep = '_')
+}
+
+# Parse
+tridf <- df[df$type == 'triangle', ] # data frame of triangles
+rampdf <- df[df$type == 'ramp', ] # ramps
+sinedf <- df[df$trimdatacheck == 1, ] # sines
+
+tridf <- subset(tridf, tridf$amp == 3)
+scHD <- tridf$trisc1 - tridf$trisc2
+mifrHD <- tridf$trimifr1 - tridf$trimifr2
+tridf <- cbind(tridf, scHD, mifrHD)
+
+rampdf <- subset(rampdf, rampdf$amp == 3)
+```
+
+```{r}
+triTaffs <- unique(tridf$unID[which(tridf$KT == 'T')]) # find afferents with control data
+triCaffs <- unique(tridf$unID[which(tridf$KT == 'C')]) # find afferents with SEE data
+trikeepaffs <- triCaffs[is.element(triCaffs, triTaffs)] # afferents with both
+trikeepaffs
+tridf <- subset(tridf, is.element(tridf$unID, trikeepaffs)) # subset to afferents with Ctrl and SEE data
+
+rampTaffs <- unique(rampdf$unID[which(rampdf$KT == 'T')])
+rampCaffs <- unique(rampdf$unID[which(rampdf$KT == 'C')])
+rampkeepaffs <- rampCaffs[is.element(rampCaffs, rampTaffs)]
+rampkeepaffs
+
+rampdf <- subset(rampdf, is.element(rampdf$unID, rampkeepaffs))
+
+sineTaffs <- unique(sinedf$unID[which(sinedf$KT == 'T')])
+sineCaffs <- unique(sinedf$unID[which(sinedf$KT == 'C')])
+sinekeepaffs <- sineCaffs[is.element(sineCaffs, sineTaffs)]
+sinekeepaffs
+
+sinedf <- subset(sinedf, is.element(sinedf$unID, sinekeepaffs))
+```
+
+
+# Triangles analysis
+```{r}
+tridf %>% lmerTest::lmer(formula = triIB ~ KT + (1|unID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = trisc1 ~ KT + (1|unID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = trisc2 ~ KT + (1|unID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = trimifr1 ~ KT + (1|unID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = trimifr2 ~ KT + (1|unID)) %>% summary()
+
+tridf %>% lmerTest::lmer(formula = scHD ~ KT + (1|unID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = mifrHD ~ KT + (1|unID)) %>% summary()
+```
+#plotting
+```{r}
+triIBplot <- tridf %>% ggplot(aes(x = KT, y = triIB)) +
+  geom_violin() +
+  geom_jitter(aes(color = unID), jitter.height = 0, width = 0.15) +
+  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID))
+
+trisc1plot <- tridf %>% ggplot(aes(x = KT, y = trisc1)) +
+  geom_violin() +
+  geom_point() +
+  geom_smooth(method = 'lm', se = F, aes(group = unID))
+
+trisc2plot <- tridf %>% ggplot(aes(x = KT, y = trisc2)) +
+  geom_violin() +
+  geom_point() +
+  geom_smooth(method = 'lm', se = F, aes(group = unID))
+
+trimifr1plot <- tridf %>% ggplot(aes(x = KT, y = trimifr1)) +
+  geom_violin() +
+  geom_point() +
+  geom_smooth(method = 'lm', se = F, aes(group = unID))
+
+trimifr2plot <- tridf %>% ggplot(aes(x = KT, y = trimifr2)) +
+  geom_violin() +
+  geom_point() +
+  geom_smooth(method = 'lm', se = F, aes(group = unID))
+
+triscHDplot <- tridf %>% ggplot(aes(x = KT, y = scHD)) +
+  geom_violin() +
+  geom_point() +
+  geom_smooth(method = 'lm', se = F, aes(group = unID))
+
+trimifrHDplot <- tridf %>% ggplot(aes(x = KT, y = mifrHD)) +
+  geom_violin() +
+  geom_point() +
+  geom_smooth(method = 'lm', se = F, aes(group = unID))
+
+# ggarrange(triIBplot, trisc1plot, trisc2plot, trimifr1plot, trimifr2plot, triscHDplot, trimifrHDplot, nrow = 2, ncol = 4, common.legend = T)
+
+triIBplot
+```
+
+```{r}
+rampdf %>% lmerTest::lmer(formula = IBA ~ KT + (1|unID)) %>% summary()
+```

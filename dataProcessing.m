@@ -9,133 +9,152 @@ close all
 addpath(genpath('Functions'));
 
 % load data
-destination = uigetdir('\\cosmic.bme.emory.edu\labs\ting\shared_ting\Jake\Spindle_Grant');
-D = dir(destination);
+D = dir('C:\\Users\Jake\Documents\Data\Spindle_spring_struct');
+% D = dir(destination);
 D = D(3:end);
-%%
-% loop through experiment files
-for ii = 1:numel(D)
-    disp(ii)
-    data = load([D(ii).folder filesep D(ii).name]);
-    
-    % downsampling factor
-    dsf = 20;
-    
-    % load downsampled data
-    Lf = data.recdata.Lf(1:dsf:end) - data.recdata.Lf(1);
-    Lmt = data.recdata.Lmt(1:dsf:end) - data.recdata.Lmt(1);
-    Fmt = data.recdata.Fmt(1:dsf:end);
-    time = data.recdata.time(1:dsf:end);
-    
-    % lowpass filter
-    fcut = 40;
-    fs = 1/(time(2) - time(1));
-    order = 4;
-    wn = fcut/(fs/2);
-    [b, a] = butter(order, wn);
-    
-    Lf = filtfilt(b, a, Lf);
-    Lmt = filtfilt(b, a, Lmt);
-    Fmt = filtfilt(b, a, Fmt);
-    
-    % smooth and get first derivatives with savitsky-golay filter
-    fOrder = 4;
-    Width = 21;
-    [Lf, vf, af] = sgolaydiff(Lf, fOrder, Width);
-    [Lmt, vmt, amt] = sgolaydiff(Lmt, fOrder, Width);
-    [Fmt, yank, ~] = sgolaydiff(Fmt, fOrder, Width);
-    
-    % smooth and get second derivatives
-%     [vf, af, ~] = sgolaydiff(vf, fOrder, Width);
-%     [vmt, amt, ~] = sgolaydiff(vmt, fOrder, Width);
-%     [yank, ~, ~] = sgolaydiff(yank, fOrder, Width);
-    
-    % create logical vector to keep real values and exclude nans created by
-    % smoothing
-    keep = ~isnan(af);
-    
-    Lf = Lf(keep);
-    Lmt = Lmt(keep);
-    Fmt = Fmt(keep);
-    time = time(keep);
-    vf = vf(keep);
-    vmt = vmt(keep);
-    yank = yank(keep);
-    af = af(keep);
-    amt = amt(keep);
-    
-    figure
-    subplot(331)
-    plot(time, Lf)
-    subplot(332)
-    plot(time, Lmt)
-    subplot(333)
-    plot(time, Fmt)
-    subplot(334)
-    plot(time, vf)
-    subplot(335)
-    plot(time, vmt)
-    subplot(336)
-    plot(time, yank)
-    subplot(337)
-    plot(time, af)
-    subplot(338)
-    plot(time, amt)
+%% set up calibration values
+animal = {'A18042-19-10';
+    'A18042-19-12';
+    'A18042-19-14';
+    'A18042-19-16';
+    'A18042-19-18';
+    'A18042-20-24';
+    'A18042-20-25';
+    'A18042-20-26';
+    'A18042-20-27';
+    'A18042-20-28';
+    'A18042-20-29';
+    'A18042-20-30';
+    'A18042-20-31';
+    'A18042-20-32'};
+Lf0 = {.61; .44; .639; .576; .5893; .6898; .7411; .8084; .6689; 0; .6952; .7175; .7852; .5925};
+Lf1 = {.724; .527; .699; .609; .6252; .7707; .7945; .8779; .744; 0; .7747; .8195; .8453; .6349};
+F0 = {.1997; .2434; .0981; .2007; .1929; .4645; .1737; .3044; .2049; 0; .209; .2314; .2315; .1302};
+LMT0 = {-2.855; 4.207; 1.934; -3.458; 1.074; 0.946; 1.566; 3.190; -.171; 0; -2.170; -.829; -1.590; -2.526};
+calTable = table(animal, Lf0, Lf1, F0, LMT0);
 
-    procdata.Lf = Lf;
-    procdata.Lmt = Lmt;
-    procdata.Fmt = Fmt;
-    procdata.vf = vf;
-    procdata.vmt = vmt;
-    procdata.yank = yank;
-    procdata.af = af;
-    procdata.amt = amt;
-    procdata.time = time;
-    procdata.aff1.times = data.recdata.aff1.times;
-    procdata.aff1.IFR = 1./(data.recdata.aff1.times(2:end) - data.recdata.aff1.times(1:end - 1));
-    if isfield(data.recdata, 'aff2')
-        if ~isempty(data.recdata.aff2.times)
-            procdata.aff2.IFR = 1./(data.recdata.aff2.times(2:end) - data.recdata.aff2.times(1:end - 1));
-            procdata.aff2.times = data.recdata.aff2.times;
-        end
-    end
-    
-%     save([D(ii).folder filesep D(ii).name], 'procdata', '-append')
-    
-    % plot for sanity check
-%     figure
-%     subplot(511)
-%     plot(data.recdata.time, data.recdata.Lmt, time, procdata.Lmt)
-%     title('Lmt')
-%     subplot(512)
-%     plot(data.recdata.time, data.recdata.Lf, time, procdata.Lf)
-%     title('Lf')
-%     subplot(513)
-%     plot(data.recdata.time, data.recdata.Fmt, time, procdata.Fmt)
-%     title('Fmt')
-%     if isfield(procdata, 'aff1')
-%         subplot(514)
-%         plot(procdata.aff1.times(1:end-1), procdata.aff1.IFR, '.k')
-%     end
-%     if isfield(procdata, 'aff2')
-%         subplot(515)
-%         plot(procdata.aff2.times(1:end-1), procdata.aff2.IFR, '.k')
-%     end
-%     title('IFR')
-%     fr = abs(fft(data.recdata.Lf));
-%     frange = linspace(0, fs, numel(fr));
-%     hold on
-%     plot(frange(1:floor(end/2)), fr(1:floor(end/2)))
-    clear procdata
-end
-%% identify badtrials
-% 87, 56, 45, 34, 30, 23, 12, 5, 4, 3, 2, 1
-badtrials = [1, 2, 3, 4, 5, 12, 23, 30, 34, 45, 56, 87];
-for jj = 1:numel(D)
-    if ismember(jj, badtrials)
-        badtrial = 1;
-    else
+%%
+for ii = 1:numel(D)
+    subdir = dir([D(ii).folder filesep D(ii).name]);
+    subdir = subdir(3:end);
+    for jj = 1:numel(subdir)
+        disp([ii jj])
+        data = load([subdir(jj).folder filesep subdir(jj).name]);
+
+        row = find(strcmp(data.parameters.animal, calTable.animal));
+
+        % downsampling factor
+        dsf = 20;
+
+        % load downsampled data
+        % multiply by scaling factors
+        % subtract initial values
+        Lf = (data.recdata.Lf(1:dsf:end) - data.recdata.Lf(1))*15; % 15 mm/V
+        Lmt = (data.recdata.Lmt(1:dsf:end) - data.recdata.Lmt(1))*2; % 2mm/V
+        Fmt = (data.recdata.Fmt(1:dsf:end) - data.recdata.Fmt(1))*1; % 1N/V
+        time = data.recdata.time(1:dsf:end);
+        recfs = 1/(data.recdata.time(2) - data.recdata.time(1));
+        procfs = recfs/dsf;
+
+        % lowpass filter
+        fcut = 80;
+        fs = 1/(time(2) - time(1));
+        order = 4;
+        wn = fcut/(fs/2);
+        [b, a] = butter(order, wn);
+
+        Lf = filtfilt(b, a, Lf);
+        Lmt = filtfilt(b, a, Lmt);
+        Fmt = filtfilt(b, a, Fmt);
+
+        % smooth and get first derivatives with savitsky-golay filter
+        % add initial values back
+        fOrder = 2;
+        Width = 41;
+        
+        [Lf, vf, ~] = sgolaydiff(Lf, fOrder, Width);
+        [Lmt, vmt, ~] = sgolaydiff(Lmt, fOrder, Width);
+        [Fmt, ymt, ~] = sgolaydiff(Fmt, fOrder, Width);
+        Fmt = Fmt + data.recdata.Fmt(1);
+
+        vf = vf*fs;
+        vmt = vmt*fs;
+        ymt = ymt*fs;
+
+        vf = vf(~isnan(vf));
+        vmt = vmt(~isnan(vmt));
+        ymt = ymt(~isnan(ymt));
+        vf = filtfilt(b, a, vf);
+        vmt = filtfilt(b, a, vmt);
+        ymt = filtfilt(b, a, ymt);
+
+        % smooth and get second derivatives
+        [~, af, ~] = sgolaydiff(vf, fOrder, Width);
+        [~, amt, ~] = sgolaydiff(vmt, fOrder, Width);
+
+        % create logical vector to keep real values and exclude nans created by
+        % smoothing
+        keep = ~isnan(af);
+
+        Lf = Lf(keep);
+        Lmt = Lmt(keep);
+        Fmt = Fmt(keep);
+        time = time(keep);
+        vf = vf(keep);
+        vmt = vmt(keep);
+        ymt = ymt(keep);
+        af = af(keep);
+        amt = amt(keep);
+        Lf = Lf - Lf(1);
+        Lmt = Lmt - Lmt(1);
+        
+
+%         if strcmp(data.parameters.animal, 'A18042-20-31') && data.parameters.passive == 1
+%             figure
+%             subplot(331)
+%             plot(data.recdata.time, data.recdata.Lf - data.recdata.Lf(1), ...
+%                 time, Lf)
+%             subplot(332)
+%             plot(data.recdata.time, data.recdata.Lmt - data.recdata.Lmt(1), ...
+%                 time, Lmt, ...
+%                 data.recdata.act, ones(1, numel(data.recdata.act)), '|r')
+%             subplot(333)
+%             plot(data.recdata.time, data.recdata.Fmt - data.recdata.Fmt(1), ...
+%                 time, Fmt)
+%             subplot(334)
+%             plot(time, vf)
+%             subplot(335)
+%             plot(time, vmt)
+%             subplot(336)
+%             plot(time, ymt)
+%             ax = gca;
+%             subplot(337)
+%             plot(time, af)
+%             subplot(338)
+%             plot(time, amt)
+%             subplot(339)
+%             plot(data.recdata.spiketimes, data.recdata.ifr, '.k')
+%             xlim(ax.XAxis.Limits)
+%             title(data.parameters.aff)
+%         end
+        
+        procdata.Lf = Lf;
+        procdata.Lmt = Lmt;
+        procdata.Fmt = Fmt;
+        procdata.vf = vf;
+        procdata.vmt = vmt;
+        procdata.ymt = ymt;
+        procdata.af = af;
+        procdata.amt = amt;
+        procdata.time = time;
+        procdata.spiketimes = data.recdata.spiketimes;
+        procdata.ifr = data.recdata.ifr;
+
+        % save the bad trial indicator as 0 initially, bad trials will be
+        % identified later on, skip if re-processing
         badtrial = 0;
+
+        save([subdir(jj).folder filesep subdir(jj).name], 'procdata', 'badtrial', '-append')
     end
-    save([D(jj).folder filesep D(jj).name], 'badtrial', '-append')
 end
+disp([num2str(Width*1000/procfs) ' ms'])

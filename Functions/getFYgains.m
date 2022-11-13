@@ -1,4 +1,4 @@
-function fit = getFYgains(data, parameters, type)
+ function fit = getFYgains(data, parameters, type)
 % constraints
 init = parameters(1, :);
 lower = parameters(2, :);
@@ -15,16 +15,16 @@ elseif strcmp(type, 'Fas')
 end
 time = data.time;
 spiketimes = data.spiketimes;
-IFR = data.IFR;
+ifr = data.ifr;
 
 % cost
-cost = @(gains) fy_cost(F, Y, L, V, time, spiketimes, IFR, gains);
+cost = @(gains) fy_cost(F, Y, L, V, time, spiketimes, ifr, gains);
 
 % restrain to non-negative fiber force
-if lower(1:4) == upper(1:4)
+if lower(1:4) == upper(1:4) % if constants are fixed
     nc_nlcon = [];
 else
-    nc_nlcon = @(gains) nlcon(F, Y, L, V, time, spiketimes, gains);
+    nc_nlcon = @(gains) nlcon(F, Y, L, V, time, spiketimes, gains); 
 end
 
 % run optimization
@@ -36,6 +36,9 @@ fit.F = F;
 fit.Y = Y;
 fit.L = L;
 fit.V = V;
+fit.time = time;
+fit.spiketimes = spiketimes;
+fit.ifr = ifr;
 % coefficients
 fit.A = FYgains(1);
 fit.k_exp = FYgains(2);
@@ -52,48 +55,35 @@ fit.Ync = fit.A*fit.k_exp*V.*exp(fit.k_exp*(L - fit.L0)) + fit.k_lin*V;
 fit.Fc = fit.F - fit.Fnc;
 fit.Yc = fit.Y - fit.Ync;
 
-% % occlusion
-% Fcomp = fit.kF*(fit.Fc + fit.bF);
-% Ycomp = fit.kY*(fit.Yc + fit.bY);
-% Fcomp(Fcomp < 0) = 0;
-% Ycomp(Ycomp < 0) = 0;
-% occ = smooth(Ycomp - Fcomp, 1);
-% occ(occ < 0) = 0;
-% occ = occ/max(occ);
-% occ = occ.^2;
-% occ = occ/2 + 0.5;
-% Yocc = occ;
-% Focc = 1 - Yocc;
-% Fcomp = Fcomp.*Focc;
-% Ycomp = Ycomp.*Yocc;
-% fit.occlusion = occ;
-% fit.Fcomp = Fcomp;
-% fit.Ycomp = Ycomp;
-% fit.predictor = fit.Fcomp + fit.Ycomp;
-
 % currents
-rF = fit.kF*(fit.Fc + fit.bF);
-rY = fit.kY*(fit.Yc + fit.bY);
-rF(rF < 0) = 0;
-rY(rY < 0) = 0;
-rT = rF + rY;
+rChain = fit.kF*(fit.Fc + fit.bF); % scale
+rBag = fit.kY*(fit.Yc + fit.bY);
+rChain(rChain < 0) = 0; % rectify
+rBag(rBag < 0) = 0;
+rT = rChain + rBag; % sum
+
 % occlusion
-sf = 50;
-fit.Focclusion = smooth(rF./rT, sf);
-fit.Yocclusion = smooth(rY./rT, sf);
-% components
-fit.Fcomp = rF.*fit.Focclusion;
-fit.Ycomp = rY.*fit.Yocclusion;
-% predictor
-fit.predictor = fit.Fcomp + fit.Ycomp;
+occChain = 1 + (rChain - rBag).*rT/5e5;
+occChain(occChain > 1) = 1;
+occBag = 1 + (rBag - rChain).*rT/5e5;
+occBag(occBag > 1) = 1;
+
+fit.occChain = occChain;
+fit.occBag = occBag;
+fit.chainComp = rChain.*occChain;
+fit.bagComp = rBag.*occBag;
+
+% cost
+fit.predictor = fit.chainComp + fit.bagComp;
 % error metrics
 p = interp1(time + fit.lambda, fit.predictor, spiketimes); %interpolated predictor
-C = corrcoef(p, IFR); % correlation coefficients
+C = corrcoef(p, ifr); % correlation coefficients
 fit.R = C(2, 1); % corr. coeff. of predictor and IFR
 fit.R2 = C(2, 1)^2; % square corr. coeff.
-fit.resid = IFR - p; % residual errors
-n = length(IFR);
+fit.resid = ifr - p; % residual errors
+fit.SSR = sum((ifr - p).^2);
+n = length(ifr);
 k = length(FYgains(FYgains ~=0));
 fit.R2adj = 1 - (1 - fit.R2)*(n - 1)/(n - k - 1); % adjusted R2
-fit.VAF = 1-(var(IFR - p)/var(IFR)); % variance accounted for
+fit.VAF = 1-(var(ifr - p)/var(ifr)); % variance accounted for
 

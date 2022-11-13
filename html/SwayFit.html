@@ -1,0 +1,325 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>SwayFit</title><meta name="generator" content="MATLAB 9.10"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2022-07-21"><meta name="DC.source" content="SwayFit.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput">clc
+clear
+close <span class="string">all</span>
+addpath(genpath(<span class="string">'Functions'</span>))
+
+d = dir(<span class="string">'C:\\Users\Jake\Documents\Data\HorslenData'</span>);
+
+file = load([d(5).folder filesep d(5).name]);
+data = file.procdata;
+
+<span class="comment">% fyupper = [0.07 37.6 .6 0.1 0 50 .5 0 0]; % A, k_exp, L0, k_lin, kF, kY, bF, lambda</span>
+<span class="comment">% fylower = [0.07 37.6 .6 0.0 0 0 -.5 0 -.01];</span>
+fyupper = [0.0011 2.0 .10 0.1 1000 50 1 0 0];
+fylower = [0.0011 2.0 .09 0.0 10 10 -1 0 -.01];
+fyinit = fylower;
+fyparameters = [fyinit; fylower; fyupper];
+FYfit = getFYgains(data, fyparameters, <span class="string">'Blum'</span>);
+<span class="comment">% plotFY(data, FYfit, -30)</span>
+<span class="comment">% print(['C:\\Users\Jake\Documents\Data\HorslenData\fig1FYsway.eps'], '-depsc','-painters')</span>
+<span class="comment">% plotFY(data, FYfit, -1)</span>
+<span class="comment">% print(['C:\\Users\Jake\Documents\Data\HorslenData\fig1FYramp.eps'], '-depsc','-painters')</span>
+FYfit
+
+lvaupper = [1000 500 100 5 10 100 0];
+lvalower = [1 1 1 -1 -1 -10 -.02];
+lvainit = lvalower;
+lvaparameters = [lvainit; lvalower; lvaupper];
+LVAMfit = getLVAgains(data, lvaparameters, <span class="string">'MTU'</span>);
+<span class="comment">% plotLVA(data, LVAMfit, -30)</span>
+<span class="comment">% print(['C:\\Users\Jake\Documents\Data\HorslenData\fig1LVAMsway.eps'], '-depsc','-painters')</span>
+<span class="comment">% plotLVA(data, LVAMfit, -1)</span>
+<span class="comment">% print(['C:\\Users\Jake\Documents\Data\HorslenData\fig1LVAMramp.eps'], '-depsc','-painters')</span>
+LVAMfit
+
+LVAFfit = getLVAgains(data, lvaparameters, <span class="string">'Fas'</span>);
+<span class="comment">% plotLVA(data, LVAFfit, -30)</span>
+<span class="comment">% print(['C:\\Users\Jake\Documents\Data\HorslenData\fig1LVAFsway.eps'], '-depsc','-painters')</span>
+<span class="comment">% plotLVA(data, LVAFfit, -1)</span>
+<span class="comment">% print(['C:\\Users\Jake\Documents\Data\HorslenData\fig1LVAFramp.eps'], '-depsc','-painters')</span>
+LVAFfit
+</pre><pre class="codeoutput">
+FYfit = 
+
+  struct with fields:
+
+             F: [29018&times;1 double]
+             Y: [29018&times;1 double]
+             L: [29018&times;1 double]
+             V: [29018&times;1 double]
+             A: 0.0011
+         k_exp: 2
+            L0: 0.1000
+         k_lin: 4.1781e-12
+            kF: 422.4109
+            kY: 50.0000
+            bF: -0.2490
+            bY: 0
+        lambda: -0.0100
+           Fnc: [29018&times;1 double]
+           Ync: [29018&times;1 double]
+            Fc: [29018&times;1 double]
+            Yc: [29018&times;1 double]
+    Focclusion: [29018&times;1 double]
+    Yocclusion: [29018&times;1 double]
+         Fcomp: [29018&times;1 double]
+         Ycomp: [29018&times;1 double]
+     predictor: [29018&times;1 double]
+             R: 0.8437
+            R2: 0.7118
+         resid: [343&times;1 double]
+         R2adj: 0.7049
+           VAF: 0.6327
+
+
+LVAMfit = 
+
+  struct with fields:
+
+             L: [29018&times;1 double]
+             V: [29018&times;1 double]
+             A: [29018&times;1 double]
+            kL: 20.1371
+            kV: 11.3461
+            kA: 1.0000
+            bL: 1.9510
+            bV: 2.7982
+            bA: -10.0000
+        lambda: -0.0200
+    Locclusion: [29018&times;1 double]
+    Vocclusion: [29018&times;1 double]
+    Aocclusion: [29018&times;1 double]
+         Lcomp: [29018&times;1 double]
+         Vcomp: [29018&times;1 double]
+         Acomp: [29018&times;1 double]
+     predictor: [29018&times;1 double]
+             R: 0.8380
+            R2: 0.7023
+         resid: [343&times;1 double]
+         R2adj: 0.6961
+           VAF: 0.7022
+
+
+LVAFfit = 
+
+  struct with fields:
+
+             L: [29018&times;1 double]
+             V: [29018&times;1 double]
+             A: [29018&times;1 double]
+            kL: 693.4994
+            kV: 378.8811
+            kA: 33.3721
+            bL: -0.5175
+            bV: 0.0763
+            bA: -5.1491
+        lambda: -6.8033e-04
+    Locclusion: [29018&times;1 double]
+    Vocclusion: [29018&times;1 double]
+    Aocclusion: [29018&times;1 double]
+         Lcomp: [29018&times;1 double]
+         Vcomp: [29018&times;1 double]
+         Acomp: [29018&times;1 double]
+     predictor: [29018&times;1 double]
+             R: 0.8689
+            R2: 0.7550
+         resid: [343&times;1 double]
+         R2adj: 0.7499
+           VAF: 0.7510
+
+</pre><pre class="codeinput"><span class="keyword">for</span> ii = 3:5 <span class="comment">% numel(d)</span>
+    clear <span class="string">fit</span>
+    file = load([d(ii).folder filesep d(ii).name]);
+    data = file.procdata;
+
+    swayLmt = data.Lmt(data.time &lt; 0);
+    swayAmp = mean(sqrt(swayLmt.^2));
+
+    fyupper = [FYfit.A FYfit.k_exp FYfit.L0 FYfit.k_lin FYfit.kF FYfit.kY FYfit.bF FYfit.bY FYfit.lambda]; <span class="comment">% A, k_exp, L0, k_lin, kF, kY, bF, lambda</span>
+    fylower = [FYfit.A FYfit.k_exp FYfit.L0 FYfit.k_lin FYfit.kF FYfit.kY FYfit.bF FYfit.bY FYfit.lambda];
+    fyinit = fylower;
+    fyparameters = [fyinit; fylower; fyupper];
+    modfyfit = getFYgains(data, fyparameters, <span class="string">'Blum'</span>);
+    plotFY(data, modfyfit, -30)
+    sgtitle([<span class="string">'RMS sway amp.: '</span> num2str(swayAmp)])
+    print([<span class="string">'C:\\Users\Jake\Documents\Data\HorslenData\FY'</span>, d(ii).name, <span class="string">'sway.eps'</span>], <span class="string">'-depsc'</span>,<span class="string">'-painters'</span>)
+    plotFY(data, modfyfit, -1)
+    sgtitle([<span class="string">'RMS sway amp.: '</span> num2str(swayAmp)])
+    print([<span class="string">'C:\\Users\Jake\Documents\Data\HorslenData\FY'</span>, d(ii).name, <span class="string">'ramp.eps'</span>], <span class="string">'-depsc'</span>,<span class="string">'-painters'</span>)
+<span class="comment">%</span>
+    lvamupper = [LVAMfit.kL LVAMfit.kV LVAMfit.kA LVAMfit.bL LVAMfit.bV LVAMfit.bA LVAMfit.lambda];
+    lvamlower = [LVAMfit.kL LVAMfit.kV LVAMfit.kA LVAMfit.bL LVAMfit.bV LVAMfit.bA LVAMfit.lambda];
+    lvaminit = lvamlower;
+    lvamparameters = [lvaminit; lvamlower; lvamupper];
+    modlvamfit = getLVAgains(data, lvamparameters, <span class="string">'MTU'</span>);
+    plotLVA(data, modlvamfit, -30)
+    print([<span class="string">'C:\\Users\Jake\Documents\Data\HorslenData\LVAM'</span>, d(ii).name, <span class="string">'sway.eps'</span>], <span class="string">'-depsc'</span>,<span class="string">'-painters'</span>)
+    plotLVA(data, modlvamfit, -1)
+    print([<span class="string">'C:\\Users\Jake\Documents\Data\HorslenData\LVAM'</span>, d(ii).name, <span class="string">'ramp.eps'</span>], <span class="string">'-depsc'</span>,<span class="string">'-painters'</span>)
+
+    lvafupper = [LVAFfit.kL LVAFfit.kV LVAFfit.kA LVAFfit.bL LVAFfit.bV LVAFfit.bA LVAFfit.lambda];
+    lvaflower = [LVAFfit.kL LVAFfit.kV LVAFfit.kA LVAFfit.bL LVAFfit.bV LVAFfit.bA LVAFfit.lambda];
+    lvafinit = lvaflower;
+    lvafparameters = [lvafinit; lvaflower; lvafupper];
+    modlvaffit = getLVAgains(data, lvafparameters, <span class="string">'Fas'</span>);
+    plotLVA(data, modlvaffit, -30)
+    print([<span class="string">'C:\\Users\Jake\Documents\Data\HorslenData\LVAF'</span>, d(ii).name, <span class="string">'sway.eps'</span>], <span class="string">'-depsc'</span>,<span class="string">'-painters'</span>)
+    plotLVA(data, modlvaffit, -1)
+    print([<span class="string">'C:\\Users\Jake\Documents\Data\HorslenData\LVAF'</span>, d(ii).name, <span class="string">'ramp.eps'</span>], <span class="string">'-depsc'</span>,<span class="string">'-painters'</span>)
+<span class="comment">%     save([d(ii).folder filesep d(ii).name], 'FYfit', 'LVAfit', '-append')</span>
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="SwayFit_01.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_02.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_03.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_04.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_05.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_06.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_07.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_08.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_09.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_10.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_11.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_12.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_13.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_14.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_15.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_16.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_17.png" alt=""> <img vspace="5" hspace="5" src="SwayFit_18.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2021a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+clc
+clear
+close all
+addpath(genpath('Functions'))
+
+d = dir('C:\\Users\Jake\Documents\Data\HorslenData');
+
+file = load([d(5).folder filesep d(5).name]);
+data = file.procdata;
+
+% fyupper = [0.07 37.6 .6 0.1 0 50 .5 0 0]; % A, k_exp, L0, k_lin, kF, kY, bF, lambda
+% fylower = [0.07 37.6 .6 0.0 0 0 -.5 0 -.01];
+fyupper = [0.0011 2.0 .10 0.1 1000 50 1 0 0];
+fylower = [0.0011 2.0 .09 0.0 10 10 -1 0 -.01];
+fyinit = fylower;
+fyparameters = [fyinit; fylower; fyupper];
+FYfit = getFYgains(data, fyparameters, 'Blum');
+% plotFY(data, FYfit, -30)
+% print(['C:\\Users\Jake\Documents\Data\HorslenData\fig1FYsway.eps'], '-depsc','-painters')
+% plotFY(data, FYfit, -1)
+% print(['C:\\Users\Jake\Documents\Data\HorslenData\fig1FYramp.eps'], '-depsc','-painters')
+FYfit
+
+lvaupper = [1000 500 100 5 10 100 0];
+lvalower = [1 1 1 -1 -1 -10 -.02];
+lvainit = lvalower;
+lvaparameters = [lvainit; lvalower; lvaupper];
+LVAMfit = getLVAgains(data, lvaparameters, 'MTU');
+% plotLVA(data, LVAMfit, -30)
+% print(['C:\\Users\Jake\Documents\Data\HorslenData\fig1LVAMsway.eps'], '-depsc','-painters')
+% plotLVA(data, LVAMfit, -1)
+% print(['C:\\Users\Jake\Documents\Data\HorslenData\fig1LVAMramp.eps'], '-depsc','-painters')
+LVAMfit
+
+LVAFfit = getLVAgains(data, lvaparameters, 'Fas');
+% plotLVA(data, LVAFfit, -30)
+% print(['C:\\Users\Jake\Documents\Data\HorslenData\fig1LVAFsway.eps'], '-depsc','-painters')
+% plotLVA(data, LVAFfit, -1)
+% print(['C:\\Users\Jake\Documents\Data\HorslenData\fig1LVAFramp.eps'], '-depsc','-painters')
+LVAFfit
+%%
+for ii = 3:5 % numel(d)
+    clear fit
+    file = load([d(ii).folder filesep d(ii).name]);
+    data = file.procdata;
+    
+    swayLmt = data.Lmt(data.time < 0);
+    swayAmp = mean(sqrt(swayLmt.^2));
+    
+    fyupper = [FYfit.A FYfit.k_exp FYfit.L0 FYfit.k_lin FYfit.kF FYfit.kY FYfit.bF FYfit.bY FYfit.lambda]; % A, k_exp, L0, k_lin, kF, kY, bF, lambda
+    fylower = [FYfit.A FYfit.k_exp FYfit.L0 FYfit.k_lin FYfit.kF FYfit.kY FYfit.bF FYfit.bY FYfit.lambda];
+    fyinit = fylower;
+    fyparameters = [fyinit; fylower; fyupper];
+    modfyfit = getFYgains(data, fyparameters, 'Blum');
+    plotFY(data, modfyfit, -30)
+    sgtitle(['RMS sway amp.: ' num2str(swayAmp)])
+    print(['C:\\Users\Jake\Documents\Data\HorslenData\FY', d(ii).name, 'sway.eps'], '-depsc','-painters')
+    plotFY(data, modfyfit, -1)
+    sgtitle(['RMS sway amp.: ' num2str(swayAmp)])
+    print(['C:\\Users\Jake\Documents\Data\HorslenData\FY', d(ii).name, 'ramp.eps'], '-depsc','-painters')
+%     
+    lvamupper = [LVAMfit.kL LVAMfit.kV LVAMfit.kA LVAMfit.bL LVAMfit.bV LVAMfit.bA LVAMfit.lambda];
+    lvamlower = [LVAMfit.kL LVAMfit.kV LVAMfit.kA LVAMfit.bL LVAMfit.bV LVAMfit.bA LVAMfit.lambda];
+    lvaminit = lvamlower;
+    lvamparameters = [lvaminit; lvamlower; lvamupper];
+    modlvamfit = getLVAgains(data, lvamparameters, 'MTU');
+    plotLVA(data, modlvamfit, -30)
+    print(['C:\\Users\Jake\Documents\Data\HorslenData\LVAM', d(ii).name, 'sway.eps'], '-depsc','-painters')
+    plotLVA(data, modlvamfit, -1)
+    print(['C:\\Users\Jake\Documents\Data\HorslenData\LVAM', d(ii).name, 'ramp.eps'], '-depsc','-painters')
+    
+    lvafupper = [LVAFfit.kL LVAFfit.kV LVAFfit.kA LVAFfit.bL LVAFfit.bV LVAFfit.bA LVAFfit.lambda];
+    lvaflower = [LVAFfit.kL LVAFfit.kV LVAFfit.kA LVAFfit.bL LVAFfit.bV LVAFfit.bA LVAFfit.lambda];
+    lvafinit = lvaflower;
+    lvafparameters = [lvafinit; lvaflower; lvafupper];
+    modlvaffit = getLVAgains(data, lvafparameters, 'Fas');
+    plotLVA(data, modlvaffit, -30)
+    print(['C:\\Users\Jake\Documents\Data\HorslenData\LVAF', d(ii).name, 'sway.eps'], '-depsc','-painters')
+    plotLVA(data, modlvaffit, -1)
+    print(['C:\\Users\Jake\Documents\Data\HorslenData\LVAF', d(ii).name, 'ramp.eps'], '-depsc','-painters')
+%     save([d(ii).folder filesep d(ii).name], 'FYfit', 'LVAfit', '-append')
+end
+##### SOURCE END #####
+--></body></html>

@@ -17,17 +17,10 @@ c(1) = -min(Fc_st);
 Fc_rest = F(1) - gains(1)*exp(gains(2)*(L(1) - gains(3))) - gains(4)*(L(1) - gains(3));
 c(2) = -Fc_rest;
 
-% set a cap for VAF between 10% and 50%
-% FVAF = sum(Fnc.^2)/sum(F.^2);
-% YVAF = sum(Ync.^2)/sum(Y.^2);
-% c(3) = FVAF - .80;
-% c(4) = .10 - FVAF;
-% c(5) = YVAF - 1;
-% c(6) = -YVAF;
-
-% c(7) = -min(Fnc);
-% set a cap on NC force amplitude
-% c(3) = max(Fnc_st) - .6*max(F_st);
+% VAF constraints
+VAF = 1 - sum((F - Fnc).^2)/sum(F.^2);
+c(3) = VAF - .7;
+c(4) = .3 - VAF;
 
 % no eq constraints
 ceq = [];
