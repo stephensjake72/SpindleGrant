@@ -28,4 +28,5 @@ for ii = 1:100
     end
 end
 %%
+figure(8)
 print(['C:\\Users\Jake\Documents\Data\Spindle_spring_figures\fig1.eps'], '-depsc','-painters')
