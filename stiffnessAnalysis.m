@@ -22,6 +22,8 @@ for ii = 1:height(summaryTable)
 %                     hold on
 %                     plot(data.procdata.Lmt, data.procdata.Fmt, 'k')
 %                     plot(stiffness.Lmtcenter + dx, stiffness.Fmtcenter + dF, 'r')
+                    save(summaryTable.address{ii}, 'stiffness', '-append')
+                    clear stiffness
                 end
             case 'triangle'
                 if summaryTable.amp{ii} == 3
@@ -36,6 +38,8 @@ for ii = 1:height(summaryTable)
 %                     hold on
 %                     plot(data.procdata.Lmt, data.procdata.Fmt, 'k')
 %                     plot(stiffness.Lmtcenter + dx, stiffness.Fmtcenter + dF, 'r')
+                    save(summaryTable.address{ii}, 'stiffness', '-append')
+                    clear stiffness
                 end
             case 'sine'
                 if summaryTable.trimdatacheck{ii} == 1
@@ -50,9 +54,9 @@ for ii = 1:height(summaryTable)
 %                     hold on
 %                     plot(data.trimdata.Lmt, data.trimdata.Fmt, 'k')
 %                     plot(stiffness.Lmtcenter + dx, stiffness.Fmtcenter + dF, 'r')
+                    save(summaryTable.address{ii}, 'stiffness', '-append')
+                    clear stiffness
                 end
-            save(summaryTable.address{ii}, 'stiffness', '-append')
-            
         end
     end
 end

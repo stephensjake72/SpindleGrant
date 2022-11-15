@@ -28,6 +28,7 @@ df = read.csv('C://Users/Jake/Documents/Data/SpindleSpringSummary.csv')
 #global filters
 df <- subset(df, df$badtrial == 0) # ignore bad trials
 df <- subset(df, df$KT != 'A' & df$KT != 'B') # only take ctrl and group C for SEE
+df <- subset(df, df$aff == 'IA')
 df$KT = factor(df$KT, levels = c("T", "C")) # set KT as a factor to make analysis easier later on
 
 # create unique cell vector
@@ -83,47 +84,56 @@ tridf %>% lmerTest::lmer(formula = trimifr2 ~ KT + (1|unID)) %>% summary()
 
 tridf %>% lmerTest::lmer(formula = scHD ~ KT + (1|unID)) %>% summary()
 tridf %>% lmerTest::lmer(formula = mifrHD ~ KT + (1|unID)) %>% summary()
+
+tridf %>% lmerTest::lmer(formula = mifrHD ~ KT + (1|unID)) %>% summary()
 ```
 #plotting
 ```{r}
 triIBplot <- tridf %>% ggplot(aes(x = KT, y = triIB)) +
-  geom_violin() +
-  geom_jitter(aes(color = unID), jitter.height = 0, width = 0.15) +
-  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID))
+  geom_boxplot() +
+  geom_beeswarm() +
+  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  ylim(c(0, 300))
 
 trisc1plot <- tridf %>% ggplot(aes(x = KT, y = trisc1)) +
-  geom_violin() +
-  geom_point() +
-  geom_smooth(method = 'lm', se = F, aes(group = unID))
+  geom_boxplot() +
+  geom_beeswarm() +
+  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  ylim(c(0, 300))
 
 trisc2plot <- tridf %>% ggplot(aes(x = KT, y = trisc2)) +
-  geom_violin() +
-  geom_point() +
-  geom_smooth(method = 'lm', se = F, aes(group = unID))
+  geom_boxplot() +
+  geom_beeswarm() +
+  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  ylim(c(0, 300))
 
 trimifr1plot <- tridf %>% ggplot(aes(x = KT, y = trimifr1)) +
-  geom_violin() +
-  geom_point() +
-  geom_smooth(method = 'lm', se = F, aes(group = unID))
+  geom_boxplot() +
+  geom_beeswarm() +
+  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  ylim(c(0, 300))
 
 trimifr2plot <- tridf %>% ggplot(aes(x = KT, y = trimifr2)) +
-  geom_violin() +
-  geom_point() +
-  geom_smooth(method = 'lm', se = F, aes(group = unID))
+  geom_boxplot() +
+  geom_beeswarm() +
+  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  ylim(c(0, 300))
 
 triscHDplot <- tridf %>% ggplot(aes(x = KT, y = scHD)) +
-  geom_violin() +
-  geom_point() +
-  geom_smooth(method = 'lm', se = F, aes(group = unID))
+  geom_boxplot() +
+  geom_beeswarm() +
+  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  ylim(c(0, 300))
 
 trimifrHDplot <- tridf %>% ggplot(aes(x = KT, y = mifrHD)) +
-  geom_violin() +
-  geom_point() +
-  geom_smooth(method = 'lm', se = F, aes(group = unID))
+  geom_boxplot() +
+  geom_beeswarm() +
+  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  ylim(c(0, 300))
 
-# ggarrange(triIBplot, trisc1plot, trisc2plot, trimifr1plot, trimifr2plot, triscHDplot, trimifrHDplot, nrow = 2, ncol = 4, common.legend = T)
+ggarrange(triIBplot, trisc1plot, trisc2plot, trimifr1plot, trimifr2plot, triscHDplot, trimifrHDplot, nrow = 2, ncol = 4, common.legend = T)
 
-triIBplot
+# triIBplot
 ```
 
 ```{r}
