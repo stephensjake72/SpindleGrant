@@ -10,7 +10,7 @@ ifr = data.ifr;
 pktimes = time(locs);
 cycleT = pktimes(2) - pktimes(1);
 
-ifrpks = locs;
+ifrpks = locs; % use locs to make a vector the right length
 ifrpktimes = locs;
 for jj = 1:numel(locs)
     tStart = pktimes(jj) - cycleT/3;
@@ -23,7 +23,7 @@ for jj = 1:numel(locs)
     ifrpktimes(jj) = stwin(id);
 end
 
-stretchifr = ifr(st >= pktimes(1) - cycleT/2);
+stretchifr = ifr(st >= pktimes(1) + cycleT/2);
 meanifr = mean(stretchifr);
 
 ifrMetrics.peakifr = median(ifrpks(2:end));

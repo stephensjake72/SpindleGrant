@@ -15,6 +15,7 @@ ids = (id-5):(id+5);
 % fit 2nd order polynomial to the points
 pmt = polyfit(Lmt(ids), Fmt(ids), 2);
 pf = polyfit(Lf(ids), Fmt(ids), 2);
+pl = polyfit(Lmt(ids), Lf(ids), 2);
 
 % compute centers
 Lmt_c = Lmt(id);
@@ -23,10 +24,12 @@ Lf_c = Lf(id);
 
 % compute and evaluate slopes
 kMTU = 2*pmt(1)*Lmt_c + pmt(2);
-kFas = 2*pf(1)*Lf_c +pf(2);
+kFas = 2*pf(1)*Lf_c + pf(2);
+dLfdLmt = 2*pl(1)*Lmt_c + pl(2); 
 
 stiffness.kMTU = kMTU;
 stiffness.kFas = kFas;
+stiffness.dLfdLmt = dLfdLmt;
 stiffness.Fmtcenter = Fmt_c;
 stiffness.Lmtcenter = Lmt_c;
 stiffness.Lfcenter = Lf_c;

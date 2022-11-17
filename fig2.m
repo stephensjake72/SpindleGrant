@@ -7,7 +7,7 @@ addpath(genpath('Functions'))
 
 %% find ctrl data
 animals = unique(summaryTable.animal);
-
+F = figure();
 Tcount = 0;
 for ii = 1:height(summaryTable)
     check1 = summaryTable.badtrial{ii} == 0;
@@ -23,26 +23,54 @@ for ii = 1:height(summaryTable)
     
     if check1 && check2 && check3 && check4 && check5 && check6 && Tcount == 1
         data = load(summaryTable.address{ii});
+        time = data.procdata.time;
+        st = data.procdata.spiketimes;
+        ifr = data.procdata.ifr;
+        Lmt = data.procdata.Lmt;
+        Lf = data.procdata.Lf;
+        Fmt = data.procdata.Fmt;
         
+        % time series
         subplot(421)
         hold on
-        plot(data.procdata.time, data.procdata.Lmt, 'k')
+        plot(time, Lmt, 'k')
         subplot(423)
         hold on
-        plot(data.procdata.time, data.procdata.Lf, 'k')
+        plot(time, Lf, 'k')
         subplot(425)
         hold on
-        plot(data.procdata.time, data.procdata.Fmt, 'k')
+        plot(time, Fmt, 'k')
         subplot(427)
         hold on
-        plot(data.procdata.spiketimes, data.procdata.ifr, '.k')
+        plot(st(st < 2.5), ifr(st < 2.5), '.k')
+        plot(st(st >= 2.5), ifr(st >= 2.5), ...
+            'Color', [.5 .5 .5], 'Marker', '.', 'LineStyle', 'none')
+        
+        % ifr vs L, V, F
+        Lmt_st = interp1(time, Lmt, st);
+        Lf_st = interp1(time, Lf, st);
+        Fmt_st = interp1(time, Fmt, st);
+        firstwin = st < 2.5;
+        lastwin = st >= 2.5;
         
         subplot(422)
-        plot(data.procdata.Lmt, data.procdata.Lf, 'k')
+        plot(Lmt_st(firstwin), ifr(firstwin), '.k')
+        hold on
+        plot(Lmt_st(lastwin), ifr(lastwin), ...
+            'Color', [.5 .5 .5], 'Marker', '.', 'LineStyle', 'none')
+        xlabel('Lmt')
         subplot(424)
-        plot(data.procdata.Lmt, data.procdata.Fmt, 'k')
+        plot(Lf_st(firstwin), ifr(firstwin), '.k')
+        hold on
+        plot(Lf_st(lastwin), ifr(lastwin), ...
+            'Color', [.5 .5 .5], 'Marker', '.', 'LineStyle', 'none')
+        xlabel('Lf')
         subplot(426)
-        plot(data.procdata.Lf, data.procdata.Fmt, 'k')
+        plot(Fmt_st(firstwin), ifr(firstwin), '.k')
+        hold on
+        plot(Fmt_st(lastwin), ifr(lastwin), ...
+            'Color', [.5 .5 .5], 'Marker', '.', 'LineStyle', 'none')
+        xlabel('Fmt')
     end
 end
 %%
@@ -61,35 +89,65 @@ for jj = 1:height(summaryTable)
     
     if check1 && check2 && check3 && check4 && check5 && check6 && Ccount == 3
         data = load(summaryTable.address{jj});
+        time = data.procdata.time;
+        st = data.procdata.spiketimes;
+        ifr = data.procdata.ifr;
+        Lmt = data.procdata.Lmt;
+        Lf = data.procdata.Lf;
+        Fmt = data.procdata.Fmt;
         
+        % time series
         subplot(421)
         hold on
-        plot(data.procdata.time, data.procdata.Lmt, 'c')
+        plot(time, Lmt, 'Color', [0 .447 .741])
+        ax = gca;
         subplot(423)
         hold on
-        plot(data.procdata.time, data.procdata.Lf, 'c')
+        plot(time, Lf, 'Color', [0 .447 .741])
         subplot(425)
         hold on
-        plot(data.procdata.time, data.procdata.Fmt, 'c')
+        plot(time, Fmt, 'Color', [0 .447 .741])
         subplot(427)
         hold on
-        plot(data.procdata.spiketimes, data.procdata.ifr, '.c')
+        plot(st(st < 2.5), ifr(st < 2.5), ...
+            'Color', [0 .447 .741], 'Marker', '.', 'LineStyle', 'none')
+        plot(st(st >= 2.5), ifr(st >= 2.5), ...
+            'Color', [0.3010 0.7450 0.9330], 'Marker', '.', 'LineStyle', 'none')
+        xlim(ax.XAxis.Limits)
+        
+        % ifr vs L, V, F
+        Lmt_st = interp1(time, Lmt, st);
+        Lf_st = interp1(time, Lf, st);
+        Fmt_st = interp1(time, Fmt, st);
+        firstwin = st < 2.5;
+        lastwin = st >= 2.5;
         
         subplot(422)
+        plot(Lmt_st(firstwin), ifr(firstwin), ...
+            'Color', [0 .447 .741], 'Marker', '.', 'LineStyle', 'none')
         hold on
-        plot(data.procdata.Lmt, data.procdata.Lf, 'c')
+        plot(Lmt_st(lastwin), ifr(lastwin), ...
+            'Color', [0.3010 0.7450 0.9330], 'Marker', '.', 'LineStyle', 'none')
         xlabel('Lmt')
-        ylabel('Lf')
+        xlim([-.5 3.5])
         subplot(424)
+        plot(Lf_st(firstwin), ifr(firstwin), ...
+            'Color', [0 .447 .741], 'Marker', '.', 'LineStyle', 'none')
         hold on
-        plot(data.procdata.Lmt, data.procdata.Fmt, 'c')
-        xlabel('Lmt')
-        ylabel('Fmt')
-        subplot(426)
-        hold on
-        plot(data.procdata.Lf, data.procdata.Fmt, 'c')
+        plot(Lf_st(lastwin), ifr(lastwin), ...
+            'Color', [0.3010 0.7450 0.9330], 'Marker', '.', 'LineStyle', 'none')
         xlabel('Lf')
-        ylabel('Fmt')
+        xlim([-.25 1.75])
+        subplot(426)
+        plot(Fmt_st(firstwin), ifr(firstwin), ...
+            'Color', [0 .447 .741], 'Marker', '.', 'LineStyle', 'none')
+        hold on
+        plot(Fmt_st(lastwin), ifr(lastwin), ...
+            'Color', [0.3010 0.7450 0.9330], 'Marker', '.', 'LineStyle', 'none')
+        xlabel('Fmt')
+        xlim([0 1.25])
     end
 end
-% print(['C:\\Users\Jake\Documents\Data\Spindle_spring_figures\fig2a.eps'], '-depsc','-painters')
+%%
+saveas(F, 'C:\\Users\Jake\Documents\Lab\JEPfig2.jpg')
+print(['C:\\Users\Jake\Documents\Data\Spindle_spring_figures\fig2a.eps'], '-depsc','-painters')

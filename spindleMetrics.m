@@ -35,7 +35,7 @@ for ii = 1:height(summaryTable)
                     continue
                 end
 %                 
-                % plot to check
+                % plot to check (or don't)
                 if ~strcmp(data.parameters.aff, 'IB') && ~strcmp(data.parameters.aff, 'II')
 %                     figure('Position', [400 400 400 400])
 %                     subplot(211)

@@ -61,7 +61,7 @@ for ii = 1:height(summaryTable)
     end
 end
 %%
-vars = {'kMTU', 'kFas', 'FasExc'};
+vars = {'kMTU', 'kFas', 'FasExc', 'dLfdLmt'};
 summaryTable = tableAppend(summaryTable, vars);
 save('summaryTable.mat', 'summaryTable')
 writetable(summaryTable, 'C:\\Users\Jake\Documents\Data\SpindleSpringSummary.csv')
