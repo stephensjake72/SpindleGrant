@@ -74,28 +74,125 @@ sinedf <- subset(sinedf, is.element(sinedf$unID, sinekeepaffs))
 ```
 # Stiffness analysis
 ```{r}
+# Ramps
 dLfdLmtrampplot <- rampdf %>%
   ggplot(aes(x = KT, y = dLfdLmt)) + 
   geom_boxplot() + 
   geom_beeswarm() + 
-  geom_smooth(aes(group = animal), method = 'lm', se = F)
-dLfdLmtrampplot
+  geom_smooth(aes(group = animal), method = 'lm', se = F) +
+  ylim(c(0, .8))
 
 kMTUrampplot <- rampdf %>%
   ggplot(aes(x = KT, y = kMTU)) + 
   geom_boxplot() + 
   geom_beeswarm() + 
-  geom_smooth(aes(group = animal), method = 'lm', se = F)
-kMTUrampplot
+  geom_smooth(aes(group = animal), method = 'lm', se = F) +
+  ylim(c(0, .8))
 
 kFasrampplot <- rampdf %>%
   ggplot(aes(x = KT, y = kFas)) + 
   geom_boxplot() + 
   geom_beeswarm() + 
-  geom_smooth(aes(group = animal), method = 'lm', se = F)
-kFasrampplot
+  geom_smooth(aes(group = animal), method = 'lm', se = F) +
+  ylim(c(0, 2))
+
+# Triangles
+dLfdLmttriplot <- tridf %>%
+  ggplot(aes(x = KT, y = dLfdLmt)) + 
+  geom_boxplot() + 
+  geom_beeswarm() + 
+  geom_smooth(aes(group = animal), method = 'lm', se = F) +
+  ylim(c(0, .8))
+
+kMTUtriplot <- tridf %>%
+  ggplot(aes(x = KT, y = kMTU)) + 
+  geom_boxplot() + 
+  geom_beeswarm() + 
+  geom_smooth(aes(group = animal), method = 'lm', se = F) +
+  ylim(c(0, .8))
+
+kFastriplot <- tridf %>%
+  ggplot(aes(x = KT, y = kFas)) + 
+  geom_boxplot() + 
+  geom_beeswarm() + 
+  geom_smooth(aes(group = animal), method = 'lm', se = F) +
+  ylim(c(0, 2))
+
+# Sines
+dLfdLmtsineplot <- sinedf %>%
+  ggplot(aes(x = KT, y = dLfdLmt)) + 
+  geom_boxplot() + 
+  geom_beeswarm() + 
+  geom_smooth(aes(group = animal), method = 'lm', se = F) +
+  ylim(c(0, .8))
+
+kMTUsineplot <- tridf %>%
+  ggplot(aes(x = KT, y = kMTU)) + 
+  geom_boxplot() + 
+  geom_beeswarm() + 
+  geom_smooth(aes(group = animal), method = 'lm', se = F) +
+  ylim(c(0, .8))
+
+kFassineplot <- sinedf %>%
+  ggplot(aes(x = KT, y = kFas)) + 
+  geom_boxplot() + 
+  geom_beeswarm() + 
+  geom_smooth(aes(group = animal), method = 'lm', se = F) +
+  ylim(c(0, 2))
+
+ktriplot <- ggarrange(dLfdLmttriplot, kMTUtriplot, kFastriplot, nrow = 1)
+krampplot <- ggarrange(dLfdLmtrampplot, kMTUrampplot, kFasrampplot, nrow = 1)
+ksineplot <- ggarrange(dLfdLmtsineplot, kMTUsineplot, kFassineplot, nrow = 1)
+ggsave('C:/Users/Jake/Documents/Lab/fig1triangles.eps', device = 'eps', plot = ktriplot)
+ggsave('C:/Users/Jake/Documents/Lab/fig1triangles.jpg', device = 'jpg', plot = ktriplot)
+ggsave('C:/Users/Jake/Documents/Lab/fig1ramps.eps', device = 'eps', plot = krampplot)
+ggsave('C:/Users/Jake/Documents/Lab/fig1ramps.jpg', device = 'jpg', plot = krampplot)
+ggsave('C:/Users/Jake/Documents/Lab/fig1sines.eps', device = 'eps', plot = ksineplot)
+ggsave('C:/Users/Jake/Documents/Lab/fig1sines.jpg', device = 'jpg', plot = ksineplot)
+
+rampdf %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|animal)) %>% summary()
+tridf %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|animal)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|animal)) %>% summary()
+
+rampdf %>% lmerTest::lmer(formula = kMTU ~ KT + (1|animal)) %>% summary()
+tridf %>% lmerTest::lmer(formula = kMTU ~ KT + (1|animal)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = kMTU ~ KT + (1|animal)) %>% summary()
+
+rampdf %>% lmerTest::lmer(formula = kFas ~ KT + (1|animal)) %>% summary()
+tridf %>% lmerTest::lmer(formula = kFas ~ KT + (1|animal)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = kFas ~ KT + (1|animal)) %>% summary()
 ```
 
+
+# Ramps analysis
+```{r}
+rampdf %>% lmerTest::lmer(formula = IBA ~ KT + (1|unID)) %>% summary()
+rampdf %>% lmerTest::lmer(formula = DRA ~ KT + (1|unID)) %>% summary()
+rampdf %>% lmerTest::lmer(formula = DI ~ KT + (1|unID)) %>% summary()
+
+unique(rampdf$unID)
+
+# plotting
+rampIBplot <- rampdf %>% ggplot(aes(x = KT, y = IBA)) +
+  geom_violin() +
+  geom_jitter(width = .1, height = 0) +
+  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  stat_summary(fun = mean, geom = 'crossbar') +
+  ylim(c(0, 600))
+rampDRplot <- rampdf %>% ggplot(aes(x = KT, y = DRA)) +
+  geom_violin() +
+  geom_jitter(width = .1, height = 0) +
+  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  stat_summary(fun = mean, geom = 'crossbar') +
+  ylim(c(0, 600))
+rampDIplot <- rampdf %>% ggplot(aes(x = KT, y = DI)) +
+  geom_violin() +
+  geom_jitter(width = .1, height = 0) +
+  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  stat_summary(fun = mean, geom = 'crossbar') +
+  ylim(c(0, 600))
+ggarrange(rampIBplot, rampDRplot, rampDIplot, nrow = 1, legend = F)
+```
 # Triangles analysis
 ```{r}
 tridf %>% lmerTest::lmer(formula = triIB ~ KT + (1|unID)) %>% summary()
@@ -107,69 +204,72 @@ tridf %>% lmerTest::lmer(formula = trimifr2 ~ KT + (1|unID)) %>% summary()
 tridf %>% lmerTest::lmer(formula = scHD ~ KT + (1|unID)) %>% summary()
 tridf %>% lmerTest::lmer(formula = mifrHD ~ KT + (1|unID)) %>% summary()
 
-tridf %>% lmerTest::lmer(formula = kMTU ~ KT + (1|animal)) %>% summary()
-tridf %>% lmerTest::lmer(formula = kFas ~ KT + (1|animal)) %>% summary()
-tridf %>% lmerTest::lmer(formula = FasExc ~ KT + (1|animal)) %>% summary()
-```
-#plotting
-```{r}
+# plotting
 triIBplot <- tridf %>% ggplot(aes(x = KT, y = triIB)) +
-  geom_boxplot() +
-  geom_beeswarm() +
-  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  geom_violin() +
+  geom_jitter(width = .1, height = 0) +
+  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  stat_summary(fun = mean, geom = 'crossbar') +
   ylim(c(0, 300))
-
 trisc1plot <- tridf %>% ggplot(aes(x = KT, y = trisc1)) +
-  geom_boxplot() +
-  geom_beeswarm() +
-  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  geom_violin() +
+  geom_jitter(width = .1, height = 0) +
+  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  stat_summary(fun = mean, geom = 'crossbar') +
   ylim(c(0, 300))
-
 trisc2plot <- tridf %>% ggplot(aes(x = KT, y = trisc2)) +
-  geom_boxplot() +
-  geom_beeswarm() +
-  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  geom_violin() +
+  geom_jitter(width = .1, height = 0) +
+  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  stat_summary(fun = mean, geom = 'crossbar') +
   ylim(c(0, 300))
-
 trimifr1plot <- tridf %>% ggplot(aes(x = KT, y = trimifr1)) +
-  geom_boxplot() +
-  geom_beeswarm() +
-  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  geom_violin() +
+  geom_jitter(width = .1, height = 0) +
+  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  stat_summary(fun = mean, geom = 'crossbar') +
   ylim(c(0, 300))
-
 trimifr2plot <- tridf %>% ggplot(aes(x = KT, y = trimifr2)) +
-  geom_boxplot() +
-  geom_beeswarm() +
-  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  geom_violin() +
+  geom_jitter(width = .1, height = 0) +
+  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  stat_summary(fun = mean, geom = 'crossbar') +
   ylim(c(0, 300))
-
 triscHDplot <- tridf %>% ggplot(aes(x = KT, y = scHD)) +
-  geom_boxplot() +
-  geom_beeswarm() +
-  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  geom_violin() +
+  geom_jitter(width = .1, height = 0) +
+  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  stat_summary(fun = mean, geom = 'crossbar') +
   ylim(c(0, 300))
-
 trimifrHDplot <- tridf %>% ggplot(aes(x = KT, y = mifrHD)) +
-  geom_boxplot() +
-  geom_beeswarm() +
-  geom_smooth(method = 'lm', se = F, aes(color = unID, group = unID)) +
+  geom_violin() +
+  geom_jitter(width = .1, height = 0) +
+  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  stat_summary(fun = mean, geom = 'crossbar') +
   ylim(c(0, 300))
-
-ggarrange(triIBplot, trisc1plot, trisc2plot, trimifr1plot, trimifr2plot, triscHDplot, trimifrHDplot, nrow = 2, ncol = 4, common.legend = T)
-
-# triIBplot
+ggarrange(triIBplot, trisc1plot, trisc2plot, trimifr1plot, trimifr2plot, triscHDplot,  trimifrHDplot, nrow = 2, ncol = 4, legend = F)
+ggsave('C:/Users/Jake/Documents/Lab/fig3stats.eps', device = 'eps', plot = last_plot())
+ggsave('C:/Users/Jake/Documents/Lab/fig3stats.jpg', device = 'jpg', plot = last_plot()
 ```
 
+# Sines analyssis
 ```{r}
-rampdf %>% lmerTest::lmer(formula = IBA ~ KT + (1|unID)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = DRA ~ KT + (1|unID)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = DI ~ KT + (1|unID)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = peakifr ~ KT + (1|unID)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = meanifr ~ KT + (1|unID)) %>% summary()
 
-rampdf %>% lmerTest::lmer(formula = kMTU ~ KT + (1|animal)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = kFas ~ KT + (1|animal)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|animal)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = FasExc ~ KT + (1|animal)) %>% summary()
-
-unique(rampdf$unID)
-
+sinepkplot <- sinedf %>% ggplot(aes(x = KT, y = peakifr)) +
+  geom_violin() +
+  geom_jitter(width = .1, height = 0) +
+  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  stat_summary(fun = mean, geom = 'crossbar') +
+  ylim(c(0, 300))
+sinemeanplot <- sinedf %>% ggplot(aes(x = KT, y = meanifr)) +
+  geom_violin() +
+  geom_jitter(width = .1, height = 0) +
+  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  stat_summary(fun = mean, geom = 'crossbar') +
+  ylim(c(0, 300))
+ggarrange(sinepkplot, sinemeanplot, nrow = 1, legend = F)
+ggsave('C:/Users/Jake/Documents/Lab/fig4stats.eps', device = 'eps', plot = last_plot())
+ggsave('C:/Users/Jake/Documents/Lab/fig4stats.jpg', device = 'jpg', plot = last_plot())
 ```
