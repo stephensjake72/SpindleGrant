@@ -31,6 +31,13 @@ for ii = 1:height(summaryTable)
         Lf = data.procdata.Lf;
         Fmt = data.procdata.Fmt;
         
+        % create color maps
+        cStart = [0 0 0];
+        cStop = [.7 .7 .7];
+        [map1, map2] = timeColorMap(time, st, cStart, cStop);
+        sz1 = ones(1, numel(time));
+        sz2 = ones(1, numel(st));
+        
         % time series
         subplot(421)
         hold on
@@ -43,7 +50,7 @@ for ii = 1:height(summaryTable)
         plot(time, Fmt, 'k')
         subplot(427)
         hold on
-        plot(st, ifr, '.k')
+        scatter(st, ifr, 8*sz2, map2, 'filled')
         
         % ifr vs L, V, F
         Lmt_st = interp1(time, Lmt, st);
@@ -52,17 +59,24 @@ for ii = 1:height(summaryTable)
         firstwin = st < 2.5;
         lastwin = st >= 2.5;
         
+        TLmtr = data.models.rLmt;
+        TLfr = data.models.rLf;
+        TFmtr = data.models.rFmt;
+        
         subplot(422)
-        plot(Lmt_st, ifr, '.k')
         hold on
+        scatter(Lmt_st, ifr, 8*sz2, map2, 'filled')
+        plot(Lmt_st, data.models.mLmt*Lmt_st, 'k')
         xlabel('Lmt')
         subplot(424)
         hold on
-        plot(Lf_st, ifr, '.k')
+        scatter(Lf_st, ifr, 8*sz2, map2, 'filled')
+        plot(Lf_st, data.models.mLf*Lf_st, 'k')
         xlabel('Lf')
         subplot(426)
         hold on
-        plot(Fmt_st, ifr, '.k')
+        scatter(Fmt_st, ifr, 8*sz2, map2, 'filled')
+        plot(Fmt_st, data.models.mFmt*Fmt_st, 'k')
         xlabel('Fmt')
     end
 end
@@ -89,53 +103,57 @@ for jj = 1:height(summaryTable)
         Lf = data.procdata.Lf;
         Fmt = data.procdata.Fmt;
         
+        % create color maps
+        cStart = [84,39,143]/255;
+        cStop = [203,201,226]/255;
+        [map1, map2] = timeColorMap(time(time > .5), st, cStart, cStop);
+        sz1 = ones(1, numel(time));
+        sz2 = ones(1, numel(st));
+        
         % time series
         subplot(421)
         hold on
-        plot(time, Lmt, 'Color', [0 .447 .741])
+        plot(time, Lmt, 'Color', cStart)
         xlim([0.5 2.5])
         ax = gca;
         subplot(423)
         hold on
-        plot(time, Lf, 'Color', [0 .447 .741])
+        plot(time, Lf, 'Color', cStart)
         xlim(ax.XAxis.Limits)
         subplot(425)
         hold on
-        plot(time, Fmt, 'Color', [0 .447 .741])
+        plot(time, Fmt, 'Color', cStart)
         xlim(ax.XAxis.Limits)
         subplot(427)
         hold on
-        plot(st, ifr, ...
-            'Color', [0 .447 .741], 'Marker', '.', 'LineStyle', 'none')
+        scatter(st, ifr, 8*sz2, map2, 'filled')
         xlim(ax.XAxis.Limits)
         
         % ifr vs L, V, F
         Lmt_st = interp1(time, Lmt, st);
         Lf_st = interp1(time, Lf, st);
         Fmt_st = interp1(time, Fmt, st);
-        firstwin = st < 2.5;
-        lastwin = st >= 2.5;
         
         subplot(422)
         hold on
-        plot(Lmt_st, ifr, ...
-            'Color', [0 .447 .741], 'Marker', '.', 'LineStyle', 'none')
+        scatter(Lmt_st, ifr, 8*sz2, map2, 'filled')
+        plot(Lmt_st, data.models.mLmt*Lmt_st, 'k')
         xlabel('Lmt')
         xlim([-.5 3.5])
         subplot(424)
         hold on
-        plot(Lf_st, ifr, ...
-            'Color', [0 .447 .741], 'Marker', '.', 'LineStyle', 'none')
+        scatter(Lf_st, ifr, 8*sz2, map2, 'filled')
+        plot(Lf_st, data.models.mLf*Lf_st, 'k')
         xlabel('Lf')
         xlim([-.25 1.75])
         subplot(426)
         hold on
-        plot(Fmt_st, ifr, ...
-            'Color', [0 .447 .741], 'Marker', '.', 'LineStyle', 'none')
+        scatter(Fmt_st, ifr, 8*sz2, map2, 'filled')
+        plot(Fmt_st, data.models.mFmt*Fmt_st, 'k')
         xlabel('Fmt')
         xlim([0 1.75])
     end
 end
 %%
 saveas(F, 'C:\\Users\Jake\Documents\Lab\JEPfig3.jpg')
-print(['C:\\Users\Jake\Documents\Data\Spindle_spring_figures\fig3a.eps'], '-depsc','-painters')
+print(['C:\\Users\Jake\Documents\Lab\fig3data.eps'], '-depsc','-painters')

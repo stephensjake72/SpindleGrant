@@ -3,6 +3,7 @@ clc
 clear
 close all
 load('summaryTable.mat')
+addpath(genpath('Functions'))
 
 %% find ctrl data
 animals = unique(summaryTable.animal);
@@ -29,35 +30,44 @@ for ii = 1:height(summaryTable)
         Lf = data.procdata.Lf;
         Fmt = data.procdata.Fmt;
         
+        % create color maps
+        cStart = [0 0 0];
+        cStop = [.7 .7 .7];
+        [map1, map2] = timeColorMap(time, st, cStart, cStop);
+        sz1 = ones(1, numel(time));
+        sz2 = 6*ones(1, numel(st));
+        
         % time series
         subplot(421)
         hold on
-        plot(time, Lmt, 'k')
+        scatter(time, Lmt, sz1, map1)
         xlim([.5 2.5])
+        ylim([0 3])
         ax = gca;
         subplot(423)
         hold on
-        plot(time, Lf, 'k')
+        scatter(time, Lf, sz1, map1)
         xlim(ax.XAxis.Limits)
         subplot(425)
         hold on
-        plot(time, Fmt, 'k')
+        scatter(time, Fmt, sz1, map1)
         xlim(ax.XAxis.Limits)
         subplot(427)
         hold on
-        plot(st(st < 2.5), ifr(st < 2.5), '.k')
-        plot(st(st >= 2.5), ifr(st >= 2.5), ...
-            'Color', [.5 .5 .5], 'Marker', '.', 'LineStyle', 'none')
+        scatter(st, ifr, sz2, map2, 'filled')
         xlim(ax.XAxis.Limits)
         
         subplot(422)
-        plot(data.procdata.Lmt, data.procdata.Lf, 'k')
+        scatter(data.procdata.Lmt, data.procdata.Lf, sz1, map1)
+        set(gca, 'Box', 'off')
         xlim([-.5 3.5])
         subplot(424)
-        plot(data.procdata.Lmt, data.procdata.Fmt, 'k')
+        scatter(data.procdata.Lmt, data.procdata.Fmt, sz1, map1)
+        set(gca, 'Box', 'off')
         xlim([-.5 3.5])
         subplot(426)
-        plot(data.procdata.Lf, data.procdata.Fmt, 'k')
+        scatter(data.procdata.Lf, data.procdata.Fmt, sz1, map1)
+        set(gca, 'Box', 'off')
         xlim([-.25 1.5])
     end
 end
@@ -84,23 +94,37 @@ for jj = 1:height(summaryTable)
         Lf = data.procdata.Lf;
         Fmt = data.procdata.Fmt;
         
+        % create color maps
+        cStart = [8,81,156]/255;
+        cStop = [189,215,231]/255;
+        [map1, map2] = timeColorMap(time, st, cStart, cStop);
+        sz1 = ones(1, numel(time));
+        sz2 = 6*ones(1, numel(st));
+        
         subplot(422)
         hold on
-        plot(data.procdata.Lmt, data.procdata.Lf, 'Color', [0 .447 .741])
+        scatter(data.procdata.Lmt, data.procdata.Lf, sz1, map1)
+        set(gca, 'Box', 'off')
         xlabel('Lmt')
         ylabel('Lf')
+        xlim([-.5 3.5])
         subplot(424)
         hold on
-        plot(data.procdata.Lmt, data.procdata.Fmt, 'Color', [0 .447 .741])
+        scatter(data.procdata.Lmt, data.procdata.Fmt, sz1, map1)
+        set(gca, 'Box', 'off')
         xlabel('Lmt')
         ylabel('Fmt')
+        xlim([-.5 3.5])
         subplot(426)
         hold on
-        plot(data.procdata.Lf, data.procdata.Fmt, 'Color', [0 .447 .741])
+        scatter(data.procdata.Lf, data.procdata.Fmt, sz1, map1)
+        set(gca, 'Box', 'off')
         xlabel('Lf')
         ylabel('Fmt')
+        xlim([-.25 1.5])
+        
     end
 end
 %%
 saveas(F, 'C:\\Users\Jake\Documents\Lab\JEPfig1.jpg')
-print(['C:\\Users\Jake\Documents\Data\Spindle_spring_figures\fig1.eps'], '-depsc','-painters')
+print(['C:\\Users\Jake\Documents\Lab\fig1timeseries.eps'], '-depsc','-painters')
