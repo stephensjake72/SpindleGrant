@@ -9,8 +9,15 @@ close all
 addpath(genpath('Functions'));
 
 % load data
-D = dir('C:\\Users\Jake\Documents\Data\Spindle_spring_struct');
-% D = dir(destination);
+path = '\\cosmic.bme.emory.edu\labs\ting\shared_ting\Jake\SpindleSpring';
+
+date = datetime('today');
+savefolder = [path filesep char(date)];
+if ~exist(savefolder, 'dir')
+    mkdir(savefolder)
+end
+
+D = dir([path filesep 'recdata']);
 D = D(3:end);
 %% set up calibration values
 animal = {'A18042-19-10';
@@ -109,7 +116,7 @@ for ii = 1:numel(D)
         Lmt = Lmt - Lmt(1);
         
 
-%         if strcmp(data.parameters.animal, 'A18042-20-31') && data.parameters.passive == 1
+%         if data.parameters.passive == 1 && strcmp(data.parameters.aff, 'IA')
 %             figure
 %             subplot(331)
 %             plot(data.recdata.time, data.recdata.Lf - data.recdata.Lf(1), ...

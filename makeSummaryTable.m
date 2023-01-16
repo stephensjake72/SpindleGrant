@@ -3,29 +3,30 @@ clc
 clear
 close all
 
-D = dir('C:\\Users\Jake\Documents\Data\Spindle_spring_struct');
-D = D(3:end);
+path = '\\cosmic.bme.emory.edu\labs\ting\shared_ting\Jake\SpindleSpring\recdata';
 
-count = 0;
-for ii = 1:numel(D)
-    subD = dir([D(ii).folder filesep D(ii).name]);
-    subD = subD(3:end);
-    
-    count = count + numel(subD);
-end
+D = dir(path);
+data = load([D(4).folder filesep D(4).name]);
 
-summaryTable = table('Size', [count, 1], ...
-    'VariableTypes', {'cell'}, ...
-    'VariableNames', {'address'});
-
-n = 1;
-for jj = 1:numel(D)
-    subD = dir([D(jj).folder filesep D(jj).name]);
-    subD = subD(3:end);
-    for kk = 1:numel(subD)
-        summaryTable.address{n} = [subD(kk).folder filesep subD(kk).name];
-        n = n + 1;
+fields = fieldnames(data);
+nrows = 0;
+for ii = 1:length(D)
+    if contains(D(ii).name, '.mat')
+        nrows = nrows + 1;
     end
 end
 
-save('summaryTable.mat', 'summaryTable')
+ncols = 0;
+fields = fieldnames(data);
+for jj = 1:length(fields)
+    subfields = fieldnames(data.(fields{jj}));
+    for kk = 1:length(subfields)
+        check1 = ischar(data.(fields{jj}).(subfields{kk}));
+        check2 = isnumeric(data.(fields{jj}).(subfields{kk})) && ...
+            length(data.(fields{jj}).(subfields{kk})) == 1;
+        if check1 || check2
+            ncols = ncols + 1;
+        end
+    end
+end
+ncols

@@ -125,15 +125,18 @@ sinepkplot <- sinedf %>% ggplot(aes(x = KT, y = peakifr)) +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 300))
+  ylim(c(0, 300)) +
+  theme_bw()
 sinemeanplot <- sinedf %>% ggplot(aes(x = KT, y = meanifr)) +
   geom_violin() +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 300))
-ggarrange(sinepkplot, sinemeanplot, nrow = 1, legend = F)
-ggsave('C:/Users/Jake/Documents/Lab/fig2stats.eps', device = 'eps', plot = last_plot())
+  ylim(c(0, 300)) +
+  theme_bw()
+ggarrange(sinepkplot, sinemeanplot, nrow = 2, ncol= 1, legend = F)
+ggsave('C:/Users/Jake/Documents/Lab/fig2stats.eps', device = 'eps', plot = last_plot(), 
+       width = 2, height = 4, units = 'in')
 ggsave('C:/Users/Jake/Documents/Lab/fig2stats.jpg', device = 'jpg', plot = last_plot())
 ```
 
@@ -143,6 +146,7 @@ ggsave('C:/Users/Jake/Documents/Lab/fig2stats.jpg', device = 'jpg', plot = last_
 rampdf %>% lmerTest::lmer(formula = IBA ~ KT + (1|unID)) %>% summary()
 rampdf %>% lmerTest::lmer(formula = DRA ~ KT + (1|unID)) %>% summary()
 rampdf %>% lmerTest::lmer(formula = DI ~ KT + (1|unID)) %>% summary()
+rampdf %>% lmerTest::lmer(formula = SRA ~ KT + (1|unID)) %>% summary()
 rampdf$IBA[rampdf$KT == 'T'] %>% describe() 
 rampdf$IBA[rampdf$KT == 'C'] %>% describe() 
 
@@ -155,22 +159,25 @@ rampIBplot <- rampdf %>% ggplot(aes(x = KT, y = IBA)) +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 600))
+  ylim(c(0, 600)) +
+  theme_bw()
 rampDRplot <- rampdf %>% ggplot(aes(x = KT, y = DRA)) +
   geom_violin() +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 600))
+  ylim(c(0, 400)) +
+  theme_bw()
 rampDIplot <- rampdf %>% ggplot(aes(x = KT, y = DI)) +
   geom_violin() +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 600))
-ggarrange(rampIBplot, rampDRplot, rampDIplot, nrow = 1, legend = F)
+  ylim(c(0, 300)) +
+  theme_bw()
+ggarrange(rampIBplot, rampDRplot, rampDIplot, nrow = 3, legend = F)
 ggsave('C:/Users/Jake/Documents/Lab/fig3stats.eps', device = 'eps', plot = last_plot(),
-       width = 3, height = 4, units = 'in')
+       width = 2, height = 6, units = 'in')
 ggsave('C:/Users/Jake/Documents/Lab/fig3stats.jpg', device = 'jpg', plot = last_plot())
 ```
 # Triangles analysis
@@ -192,44 +199,51 @@ triIBplot <- tridf %>% ggplot(aes(x = KT, y = triIB)) +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 300))
+  ylim(c(0, 300)) +
+  theme_bw()
 trisc1plot <- tridf %>% ggplot(aes(x = KT, y = trisc1)) +
   geom_violin() +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 150))
+  ylim(c(0, 150)) +
+  theme_bw()
 trisc2plot <- tridf %>% ggplot(aes(x = KT, y = trisc2)) +
   geom_violin() +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 150))
+  ylim(c(0, 150)) +
+  theme_bw()
 trimifr1plot <- tridf %>% ggplot(aes(x = KT, y = trimifr1)) +
   geom_violin() +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 200))
+  ylim(c(0, 200)) +
+  theme_bw()
 trimifr2plot <- tridf %>% ggplot(aes(x = KT, y = trimifr2)) +
   geom_violin() +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 200))
+  ylim(c(0, 200)) +
+  theme_bw()
 triscHDplot <- tridf %>% ggplot(aes(x = KT, y = scHD)) +
   geom_violin() +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 50))
+  ylim(c(0, 50)) +
+  theme_bw()
 trimifrHDplot <- tridf %>% ggplot(aes(x = KT, y = mifrHD)) +
   geom_violin() +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 50))
-ggarrange(triIBplot, trimifr1plot, trimifr2plot, trisc1plot, trisc2plot, {}, triscHDplot,  trimifrHDplot, nrow = 3, ncol = 3, legend = F)
+  ylim(c(0, 50)) +
+  theme_bw()
+ggarrange(trimifr1plot, trimifr2plot, triIBplot, trisc1plot, trisc2plot, {}, triscHDplot,  trimifrHDplot, nrow = 3, ncol = 3, legend = F)
 ggsave('C:/Users/Jake/Documents/Lab/fig4stats.eps', device = 'eps', plot = last_plot(),
        width = 5, height = 8, units = 'in')
 ggsave('C:/Users/Jake/Documents/Lab/fig4stats.jpg', device = 'jpg', plot = last_plot())
