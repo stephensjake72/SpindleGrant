@@ -1,6 +1,6 @@
 % Script to process data
 % Author: JDS
-% Updated: 2/13/22
+% Updated: 1/17/23
 clc
 clear
 close all
@@ -18,7 +18,8 @@ if ~exist(savefolder, 'dir')
 end
 
 D = dir([path filesep 'recdata']);
-D = D(3:end);
+filerows = contains({D.name}', '.mat');
+D = D(filerows);
 %% set up calibration values
 animal = {'A18042-19-10';
     'A18042-19-12';
@@ -42,126 +43,119 @@ calTable = table(animal, Lf0, Lf1, F0, LMT0);
 
 %%
 for ii = 1:numel(D)
-    subdir = dir([D(ii).folder filesep D(ii).name]);
-    subdir = subdir(3:end);
-    for jj = 1:numel(subdir)
-        disp([ii jj])
-        data = load([subdir(jj).folder filesep subdir(jj).name]);
+    disp(ii)
+    data = load([D(ii).folder filesep D(ii).name]);
+%         row = find(strcmp(data.parameters.animal, calTable.animal));
 
-        row = find(strcmp(data.parameters.animal, calTable.animal));
+    % downsampling factor
+    dsf = 20;
 
-        % downsampling factor
-        dsf = 20;
+    % load downsampled data
+    % multiply by scaling factors
+    % subtract initial values
+    Lf = (data.recdata.Lf(1:dsf:end) - data.recdata.Lf(1))*15; % 15 mm/V
+    Lmt = (data.recdata.Lmt(1:dsf:end) - data.recdata.Lmt(1))*2; % 2mm/V
+    Fmt = (data.recdata.Fmt(1:dsf:end) - data.recdata.Fmt(1))*1; % 1N/V
+    time = data.recdata.time(1:dsf:end);
+    recfs = 1/(data.recdata.time(2) - data.recdata.time(1)); % original sampling frequency
+    procfs = recfs/dsf; % down sampling frequency
 
-        % load downsampled data
-        % multiply by scaling factors
-        % subtract initial values
-        Lf = (data.recdata.Lf(1:dsf:end) - data.recdata.Lf(1))*15; % 15 mm/V
-        Lmt = (data.recdata.Lmt(1:dsf:end) - data.recdata.Lmt(1))*2; % 2mm/V
-        Fmt = (data.recdata.Fmt(1:dsf:end) - data.recdata.Fmt(1))*1; % 1N/V
-        time = data.recdata.time(1:dsf:end);
-        recfs = 1/(data.recdata.time(2) - data.recdata.time(1));
-        procfs = recfs/dsf;
+    % lowpass filter
+    fcut = 100; % cutoff frequency
+    order = 4; % filter order
+    wn = fcut/(procfs/2); % cutoff frequency in rad/sample (cutoff/nyquist)
+    [b, a] = butter(order, wn); % filter coefficients
+    
+    % apply filter
+    Lf = filtfilt(b, a, Lf);
+    Lmt = filtfilt(b, a, Lmt);
+    Fmt = filtfilt(b, a, Fmt);
 
-        % lowpass filter
-        fcut = 80;
-        fs = 1/(time(2) - time(1));
-        order = 4;
-        wn = fcut/(fs/2);
-        [b, a] = butter(order, wn);
+    % smooth and get first derivatives with savitsky-golay filter
+    fOrder = 2;
+    Width = 41;
+    
+    [Lf, vf, af] = sgolaydiff(Lf, fOrder, Width);
+    [Lmt, vmt, amt] = sgolaydiff(Lmt, fOrder, Width);
+    [Fmt, ymt, ~] = sgolaydiff(Fmt, fOrder, Width);
+    Fmt = Fmt + data.recdata.Fmt(1);
+    
+    % rescale derivatives by multiplying by sampling frequency
+    vf = vf*procfs;
+    vmt = vmt*procfs;
+    ymt = ymt*procfs;
+    
+    % only do this section if really needed
+%     % filter derivatives again before taking second derivatives
+%     vf = filtfilt(b, a, vf);
+%     vmt = filtfilt(b, a, vmt);
+%     ymt = filtfilt(b, a, ymt);
+% 
+%     % smooth and get second derivatives
+%     [~, af, ~] = sgolaydiff(vf, fOrder, Width);
+%     [~, amt, ~] = sgolaydiff(vmt, fOrder, Width);
 
-        Lf = filtfilt(b, a, Lf);
-        Lmt = filtfilt(b, a, Lmt);
-        Fmt = filtfilt(b, a, Fmt);
-
-        % smooth and get first derivatives with savitsky-golay filter
-        % add initial values back
-        fOrder = 2;
-        Width = 41;
-        
-        [Lf, vf, ~] = sgolaydiff(Lf, fOrder, Width);
-        [Lmt, vmt, ~] = sgolaydiff(Lmt, fOrder, Width);
-        [Fmt, ymt, ~] = sgolaydiff(Fmt, fOrder, Width);
-        Fmt = Fmt + data.recdata.Fmt(1);
-
-        vf = vf*fs;
-        vmt = vmt*fs;
-        ymt = ymt*fs;
-
-        vf = vf(~isnan(vf));
-        vmt = vmt(~isnan(vmt));
-        ymt = ymt(~isnan(ymt));
-        vf = filtfilt(b, a, vf);
-        vmt = filtfilt(b, a, vmt);
-        ymt = filtfilt(b, a, ymt);
-
-        % smooth and get second derivatives
-        [~, af, ~] = sgolaydiff(vf, fOrder, Width);
-        [~, amt, ~] = sgolaydiff(vmt, fOrder, Width);
-
-        % create logical vector to keep real values and exclude nans created by
-        % smoothing
-        keep = ~isnan(af);
-
-        Lf = Lf(keep);
-        Lmt = Lmt(keep);
-        Fmt = Fmt(keep);
-        time = time(keep);
-        vf = vf(keep);
-        vmt = vmt(keep);
-        ymt = ymt(keep);
-        af = af(keep);
-        amt = amt(keep);
-        Lf = Lf - Lf(1);
-        Lmt = Lmt - Lmt(1);
-        
-
-%         if data.parameters.passive == 1 && strcmp(data.parameters.aff, 'IA')
-%             figure
-%             subplot(331)
-%             plot(data.recdata.time, data.recdata.Lf - data.recdata.Lf(1), ...
-%                 time, Lf)
-%             subplot(332)
-%             plot(data.recdata.time, data.recdata.Lmt - data.recdata.Lmt(1), ...
-%                 time, Lmt, ...
-%                 data.recdata.act, ones(1, numel(data.recdata.act)), '|r')
-%             subplot(333)
-%             plot(data.recdata.time, data.recdata.Fmt - data.recdata.Fmt(1), ...
-%                 time, Fmt)
-%             subplot(334)
-%             plot(time, vf)
-%             subplot(335)
-%             plot(time, vmt)
-%             subplot(336)
-%             plot(time, ymt)
-%             ax = gca;
-%             subplot(337)
-%             plot(time, af)
-%             subplot(338)
-%             plot(time, amt)
-%             subplot(339)
-%             plot(data.recdata.spiketimes, data.recdata.ifr, '.k')
-%             xlim(ax.XAxis.Limits)
-%             title(data.parameters.aff)
-%         end
-        
-        procdata.Lf = Lf;
-        procdata.Lmt = Lmt;
-        procdata.Fmt = Fmt;
-        procdata.vf = vf;
-        procdata.vmt = vmt;
-        procdata.ymt = ymt;
-        procdata.af = af;
-        procdata.amt = amt;
-        procdata.time = time;
-        procdata.spiketimes = data.recdata.spiketimes;
-        procdata.ifr = data.recdata.ifr;
-
-        % save the bad trial indicator as 0 initially, bad trials will be
-        % identified later on, skip if re-processing
-        badtrial = 0;
-
-        save([subdir(jj).folder filesep subdir(jj).name], 'procdata', 'badtrial', '-append')
+    % create logical vector to keep real values and exclude NaNs created by
+    % SG filter
+    keep = ~isnan(af);
+    
+    Lf = Lf(keep);
+    Lmt = Lmt(keep);
+    Fmt = Fmt(keep);
+    time = time(keep);
+    vf = vf(keep);
+    vmt = vmt(keep);
+    ymt = ymt(keep);
+    af = af(keep);
+    amt = amt(keep);
+    
+    % plot if needed
+    if data.parameters.passive == 1 && strcmp(data.parameters.aff, 'IA') && ii < 50
+        figure
+        subplot(331)
+        plot(data.recdata.time, data.recdata.Lf - data.recdata.Lf(1), ...
+            time, Lf)
+        subplot(332)
+        plot(data.recdata.time, data.recdata.Lmt - data.recdata.Lmt(1), ...
+            time, Lmt, ...
+            data.recdata.act, ones(1, numel(data.recdata.act)), '|r')
+        subplot(333)
+        plot(data.recdata.time, data.recdata.Fmt - data.recdata.Fmt(1), ...
+            time, Fmt)
+        subplot(334)
+        plot(time, vf)
+        subplot(335)
+        plot(time, vmt)
+        subplot(336)
+        plot(time, ymt)
+        ax = gca;
+        subplot(337)
+        plot(time, af)
+        subplot(338)
+        plot(time, amt)
+        subplot(339)
+        plot(data.recdata.spiketimes, data.recdata.ifr, '.k')
+        xlim(ax.XAxis.Limits)
+        title(data.parameters.aff)
     end
+    
+    % create processed data structure
+    procdata.Lf = Lf;
+    procdata.Lmt = Lmt;
+    procdata.Fmt = Fmt;
+    procdata.vf = vf;
+    procdata.vmt = vmt;
+    procdata.ymt = ymt;
+    procdata.af = af;
+    procdata.amt = amt;
+    procdata.time = time;
+    procdata.spiketimes = data.recdata.spiketimes;
+    procdata.ifr = data.recdata.ifr;
+
+    % save the bad trial indicator as 0 initially, bad trials will be
+    % identified later on, skip if re-processing
+    badtrial = 0;
+    recdata = data.recdata;
+    save([savefolder filesep D(ii).name], 'recdata', 'procdata', 'badtrial')
 end
 disp([num2str(Width*1000/procfs) ' ms'])
