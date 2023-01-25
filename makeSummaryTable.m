@@ -3,9 +3,15 @@ clc
 clear
 close all
 
+addpath(genpath('Functions'))
 path = '\\cosmic.bme.emory.edu\labs\ting\shared_ting\Jake\SpindleSpring\recdata';
 
 D = dir(path);
+filerows = contains({D.name}', '.mat');
+D = D(filerows);
+
+SumTable = makeSumTable(path)
+%%
 data = load([D(4).folder filesep D(4).name]);
 
 fields = fieldnames(data);
