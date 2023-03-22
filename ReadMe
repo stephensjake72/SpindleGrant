@@ -1,0 +1,8 @@
+Publication Authors: Abbott, E.M, Stephens, J.D., Wood, L.W., Nardelli, P., Cope, T.C., Ting, L.H., Sawicki, G.S.
+Code Author: Stephens, J.D
+
+This code base is for the purpose of processing and analyzing the data in Abbott et al 2023.
+The first script utilized is in the Spike 2 language for automating the export of data to MATLAB. Processing scripts are written in MATLAB, with statistical analysis scripts in R.
+
+To repeat this analysis, first run export exportSpikeFiles.s2s to export Spike2 data files to MATLAB.
+Next, run dataSorting.m to parse experiment files into individual stretch periods. 
