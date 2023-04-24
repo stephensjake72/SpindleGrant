@@ -1,0 +1,39 @@
+function parameters = expParam(filename, recdata)
+spaces = find(filename == ' ');
+cellnum = strfind(filename, 'cell') + 5;
+springnum = strfind(filename, 'spring') + 7; % for trials with spring listed as "spring_"
+if isempty(springnum)
+    springnum = strfind(filename, 'spr') + 4; % for trials with spring listed as "spr_"
+    if isempty(springnum)
+        springnum = strfind(filename, 'K') + 1; % for trials with spring listed as "K_"
+        if isempty(springnum)
+            springnum = strfind(filename, 'k') + 1; % for trials with spring listed as "k_"
+        end
+    end
+end
+celltypenum = strfind(filename, 'I');
+
+parameters.animal = filename(1:12);
+if isletter(filename(cellnum + 1))
+    parameters.cell = filename(cellnum:cellnum+1);
+else
+    parameters.cell = filename(cellnum);
+end
+if ~isempty(springnum)
+    parameters.KT = filename(springnum);
+else
+    parameters.KT = 'T';
+end
+if parameters.KT == 't'
+    parameters.KT = 'T';
+end
+if ~isempty(celltypenum)
+    parameters.aff = filename(celltypenum:celltypenum+1);
+else
+    parameters.aff = '';
+end
+if isempty(recdata.act)
+    parameters.passive = 1;
+else
+    parameters.passive = 0;
+end

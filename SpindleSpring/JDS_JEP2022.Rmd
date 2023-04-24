@@ -1,0 +1,153 @@
+---
+title: "JDS_JEP2022_figs"
+author: "JDS"
+date: "2022-09-27"
+output: html_document
+---
+
+```{r setup, include = F}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggpubr)
+library(grid)
+library(gridExtra)
+library(ggbeeswarm)
+library(knitr)
+library(kableExtra)
+library(lmerTest)
+library(psych)
+library(sjPlot)
+library(rstatix)
+source('~/GitHub/SpindleSpringProject/functions.R')
+
+df = read.csv('C://Users/Jake/Documents/Data/SpindleSpringSummary.csv')
+df = df[df$aff == 'IA', ]
+df = df[df$badtrial == 0, ]
+df = df[df$KT != 'A', ]
+df = df[df$KT != 'B', ]
+
+unID = df$address
+df = cbind(df, unID)
+for (i in 1:dim(df)[1]){
+  df$unID[i] = paste(df$animal[i], df$cell[i], sep = '_')
+}
+df = df[df$unID != 'NA_NA', ]
+
+rampdf = df[df$type == 'ramp', ] # pull out ramps
+rampdf = rampdf[rampdf$passive == 1, ] # ignore active ramps
+rampdf = rampdf[rampdf$amp == 3.0, ] # only take one ramp amplitude
+rampdf = rampdf[rampdf$animal != 'A18042-20-28', ]
+rampcells = unique(rampdf$unID[which(rampdf$KT == 'C')])
+rampdf = subset(rampdf, is.element(rampdf$unID, rampcells))
+
+
+sinedf = df[df$type == 'sine', ]
+sinedf = sinedf[sinedf$trimdatacheck == 1, ]
+sinedf = sinedf[sinedf$animal != 'A18042-20-28', ]
+sinecells = unique(sinedf$unID[which(sinedf$KT == 'C')])
+sinedf = subset(sinedf, is.element(sinedf$unID, sinecells))
+```
+
+
+```{r}
+rampdf$KT = factor(rampdf$KT, levels = c('T', 'C'))
+rampdf = subset(rampdf, !is.na(rampdf$KT))
+
+jw = .05
+dw = 0.75
+
+ibafig <- rampdf %>% ggplot(aes(x = KT, y = IBA, color = factor(unID))) +
+  geom_boxplot(aes(color = 'darkgrey')) +
+  geom_jitter(position = position_jitterdodge(jitter.width = jw, jitter.height = 0, dodge.width = dw)) +
+  stat_summary(fun = mean, geom = 'crossbar', position = position_dodge(width = dw), width = 1) +
+  ylim(c(0, 600))
+
+drafig <- rampdf %>% ggplot(aes(x = KT, y = DRA, color = factor(unID))) +
+  geom_boxplot(aes(color = 'darkgrey')) +
+  geom_jitter(position = position_jitterdodge(jitter.width = jw, jitter.height = 0, dodge.width = dw)) +
+  stat_summary(fun = mean, geom = 'crossbar', position = position_dodge(width = dw), width = 1) +
+  ylim(c(0, 600))
+
+srafig <- rampdf %>% ggplot(aes(x = KT, y = SRA, color = factor(unID))) +
+  geom_boxplot(aes(color = 'darkgrey')) +
+  geom_jitter(position = position_jitterdodge(jitter.width = jw, jitter.height = 0, dodge.width = dw)) +
+  stat_summary(fun = mean, geom = 'crossbar', position = position_dodge(width = dw), width = 1) +
+  ylim(c(0, 600))
+
+rrfig <- rampdf %>% ggplot(aes(x = KT, y = restRate, color = factor(unID))) +
+  geom_boxplot(aes(color = 'darkgrey')) +
+  geom_jitter(position = position_jitterdodge(jitter.width = jw, jitter.height = 0, dodge.width = dw)) +
+  stat_summary(fun = mean, geom = 'crossbar', position = position_dodge(width = dw), width = 1) +
+  ylim(c(0, 600))
+
+scfig <- rampdf %>% ggplot(aes(x = KT, y = spikect, color = factor(unID))) +
+  geom_boxplot(aes(color = 'darkgrey')) +
+  geom_jitter(position = position_jitterdodge(jitter.width = jw, jitter.height = 0, dodge.width = dw)) +
+  stat_summary(fun = mean, geom = 'crossbar', position = position_dodge(width = dw), width = 1) +
+  ylim(c(0, 600))
+
+# f1
+# f2
+# f3
+# f4
+# f5
+rampfig = ggarrange(ibafig, drafig, srafig, scfig, nrow = 1, ncol = 4, common.legend = T)
+rampfig
+
+ggsave('C:/Users/Jake/Documents/Data/Spindle_spring_figures/fig2b.eps', width = 8, height = 3.5, units = 'in', device = 'eps', plot = rampfig)
+```
+
+```{r}
+sinedf$KT = factor(sinedf$KT, levels = c('T', 'C'))
+sinedf = subset(sinedf, !is.na(sinedf$KT))
+
+pifrfig <- sinedf %>% ggplot(aes(x = KT, y = peakifr, color = factor(unID))) +
+  geom_boxplot(aes(color = 'darkgrey')) +
+  geom_jitter(position = position_jitterdodge(jitter.width = .01, jitter.height = 0, dodge.width = .5)) +
+  stat_summary(fun = mean, geom = 'crossbar', position = position_dodge(width = 0.5), width = 0.5) +
+  ylim(c(0, 210))
+
+mifrfig <- sinedf %>% ggplot(aes(x = KT, y = meanifr, color = factor(unID))) +
+  geom_boxplot(aes(color = 'darkgrey')) +
+  geom_jitter(position = position_jitterdodge(jitter.width = .01, jitter.height = 0, dodge.width = .5)) +
+  stat_summary(fun = mean, geom = 'crossbar', position = position_dodge(width = 0.5), width = 0.5) +
+  ylim(c(0, 210))
+
+sscfig <- sinedf %>% ggplot(aes(x = KT, y = spikect, color = factor(unID))) +
+  geom_boxplot(aes(color = 'darkgrey')) +
+  geom_jitter(position = position_jitterdodge(jitter.width = jw, jitter.height = 0, dodge.width = dw)) +
+  stat_summary(fun = mean, geom = 'crossbar', position = position_dodge(width = dw), width = 1) +
+  ylim(c(0, 210))
+
+sinefig = ggarrange(pifrfig, mifrfig, sscfig, nrow = 1, ncol = 3, common.legend = T)
+sinefig
+ggsave('C:/Users/Jake/Documents/Data/Spindle_spring_figures/fig2c.eps', width = 6, height = 3.5, units = 'in', device = 'eps', plot = sinefig)
+```
+
+
+```{r}
+summary(lmerTest::lmer(data = rampdf, formula = IBA ~ KT + (1|unID)))
+```
+```{r}
+summary(lmerTest::lmer(data = rampdf, formula = DRA ~ KT + (1|unID)))
+```
+```{r}
+summary(lmerTest::lmer(data = rampdf, formula = SRA ~ KT + (1|unID)))
+```
+```{r}
+summary(lmerTest::lmer(data = rampdf, formula = spikect ~ KT + (1|unID)))
+```
+
+```{r}
+summary(lmerTest::lmer(data = sinedf, formula = peakifr ~ KT + (1|unID)))
+```
+```{r}
+summary(lmerTest::lmer(data = sinedf, formula = meanifr ~ KT + (1|unID)))
+```
+```{r}
+summary(lmerTest::lmer(data = sinedf, formula = spikect ~ KT + (1|unID)))
+```
+
+```{r}
+summary
+```

@@ -1,0 +1,23 @@
+EditSelectAll();
+EditClear();
+
+FilePathSet("", 0, "Set Directory"); ' choose the directory of files you want to export
+ExportFile();
+
+Proc ExportFile()
+var f$, n%, i%, folderName$, saveName$, FileID%;
+folderName$ := "C:\\Users\\Jake\\Documents\\Data\\Spindle_spring_mat\\"; ' set destination to save files
+n% := FileList(f$, 0); ' get number of .smrx files
+var fName$[n%];
+n% := FileList(fName$[], 0); ' get file names
+for i% := 0 to n% - 1 do
+    saveName$ := folderName$ + fName$[i%] + ".mat"; ' create file name for export
+    FileID% := FileOpen(fName$[i%], 0, 3); ' open file
+    ExportChanList(1); ' get channels to export
+    ExportChanList(0, MaxTime(), -1); ' export all channels over total time range
+    'export without channel names because when there's two Memory channels they overwrite each other
+    FileSaveAs(saveName$,100,0,"",0, 
+    "UseSName=0|UseCName=0|WaveTimes=0|BinFreq=0|BinTimes=0|WaveData=2|MarkAs=1|TMarkAs=2|RMarkAs=2|RMarkData=2|WaveMarkAs=2|WaveMarkData=2|Compat=0|WaveAll=1|WaveSameN=1"); 'Export (string args)
+    FileClose(0)
+    next;
+end;
