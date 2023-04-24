@@ -3,7 +3,7 @@ function fit = getFYgains(data, parameters, type)
 init = parameters(1, :);
 lower = parameters(2, :);
 upper = parameters(3, :);
-
+ 
 F = data.Fmt;
 Y = data.ymt;
 if strcmp(type, 'Blum')
@@ -15,22 +15,22 @@ elseif strcmp(type, 'Fas')
 end
 time = data.time;
 spiketimes = data.spiketimes;
-IFR = data.IFR;
-
+IFR = data.ifr;
+ 
 % cost
 cost = @(gains) fy_cost(F, Y, L, V, time, spiketimes, IFR, gains);
-
+ 
 % restrain to non-negative fiber force
 if lower(1:4) == upper(1:4)
     nc_nlcon = [];
 else
-    nc_nlcon = @(gains) nlcon(F, Y, L, V, time, spiketimes, gains);
+    nc_nlcon = @(gains) nlcon(F, L, gains);
 end
-
+ 
 % run optimization
 options = optimoptions('fmincon', 'Display', 'off');
 [FYgains, ~] = fmincon(cost, init, [], [], [], [], lower, upper, nc_nlcon, options);
-
+ 
 % time series fitting data
 fit.F = F;
 fit.Y = Y;
@@ -51,26 +51,7 @@ fit.Fnc = fit.A*exp(fit.k_exp*(L - fit.L0)) + fit.k_lin*(L - fit.L0);
 fit.Ync = fit.A*fit.k_exp*V.*exp(fit.k_exp*(L - fit.L0)) + fit.k_lin*V;
 fit.Fc = fit.F - fit.Fnc;
 fit.Yc = fit.Y - fit.Ync;
-
-% % occlusion
-% Fcomp = fit.kF*(fit.Fc + fit.bF);
-% Ycomp = fit.kY*(fit.Yc + fit.bY);
-% Fcomp(Fcomp < 0) = 0;
-% Ycomp(Ycomp < 0) = 0;
-% occ = smooth(Ycomp - Fcomp, 1);
-% occ(occ < 0) = 0;
-% occ = occ/max(occ);
-% occ = occ.^2;
-% occ = occ/2 + 0.5;
-% Yocc = occ;
-% Focc = 1 - Yocc;
-% Fcomp = Fcomp.*Focc;
-% Ycomp = Ycomp.*Yocc;
-% fit.occlusion = occ;
-% fit.Fcomp = Fcomp;
-% fit.Ycomp = Ycomp;
-% fit.predictor = fit.Fcomp + fit.Ycomp;
-
+ 
 % currents
 rF = fit.kF*(fit.Fc + fit.bF);
 rY = fit.kY*(fit.Yc + fit.bY);
@@ -78,14 +59,13 @@ rF(rF < 0) = 0;
 rY(rY < 0) = 0;
 rT = rF + rY;
 % occlusion
-sf = 50;
-fit.Focclusion = smooth(rF./rT, sf);
-fit.Yocclusion = smooth(rY./rT, sf);
+% fit.Focclusion = smooth(rF./rT, sf);
+% fit.Yocclusion = smooth(rY./rT, sf);
 % components
-fit.Fcomp = rF.*fit.Focclusion;
-fit.Ycomp = rY.*fit.Yocclusion;
+fit.Fcomp = rF; %.*fit.Focclusion;
+fit.Ycomp = rY; %.*fit.Yocclusion;
 % predictor
-fit.predictor = fit.Fcomp + fit.Ycomp;
+fit.predictor = rT;
 % error metrics
 p = interp1(time + fit.lambda, fit.predictor, spiketimes); %interpolated predictor
 C = corrcoef(p, IFR); % correlation coefficients
@@ -96,4 +76,5 @@ n = length(IFR);
 k = length(FYgains(FYgains ~=0));
 fit.R2adj = 1 - (1 - fit.R2)*(n - 1)/(n - k - 1); % adjusted R2
 fit.VAF = 1-(var(IFR - p)/var(IFR)); % variance accounted for
+
 

@@ -1,6 +1,6 @@
 % Data Sorting
 % Author: JDS
-% Updated: 3/29/2023
+% Updated: 4/11/2023
 % The purpose of this script is to go through the data exported from Spike2
 % and put them in the proper format for analysis for the abstact "Force
 % encoding in secondary muscle spindle afferents" by Stephens et. al. for
@@ -24,26 +24,43 @@ if ~exist(savedir, 'dir')
     mkdir(savedir)
 end
 %%
-for ii = 1:numel(D)
+for ii = 45:numel(D)
     disp(D(ii).name)
-    
-    % NUMERICAL DATA EXTRACTION
     data = load([D(ii).folder filesep D(ii).name]);
     
-    disp(fieldnames(data))
-    % extract length, force, and time
+    % PARAMETER EXTRACTION
+    breaks = find(D(ii).name == '_');
+    parameters.ID = D(ii).name(1:breaks(1)-1);
+    parameters.cell = D(ii).name(breaks(2)+1:breaks(3)-1);
+    parameters.aff = D(ii).name(breaks(3)+1:breaks(3)+2);
+    
+    % extract length, force, time
     Lmt = data.Ch4.values;
     Fmt = data.Ch3.values;
     time = (0:data.Ch3.length - 1)*data.Ch3.interval;
-%     
-%     figure
-%     subplot(411)
-%     plot(time, Lmt)
-%     subplot(412)
-%     plot(time,Fmt)
-%     subplot(413)
-%     plot(spiketimes, ifr, '.k')
-%     
+    
+    % pull out spike channels
+    check = 0;
+    spikes1 = [];
+    ifr1 = [];
+    spikes2 = [];
+    ifr2 = [];
+    spikes3 = [];
+    ifr3 = [];
+    if isfield(data.Ch9, 'times')
+        spikes1 = data.Ch9.times;
+        ifr1 = spikes2ifr(spikes1);
+    end
+    if isfield(data, 'Ch11')
+        spikes2 = data.Ch11.times;
+        ifr2 = spikes2ifr(spikes2);
+        check = 1;
+        if isfield(data, 'Ch12')
+            spikes3 = data.Ch12.times;
+            ifr3 = spikes2ifr(spikes3);
+        end
+    end
+    
     % find stretch periods
     [~, vmt, ~] = sgolaydiff(Lmt, 2, 501); % take the MTU velocity
     vmt = vmt/data.Ch3.interval; % divide by sampling rate
@@ -51,8 +68,8 @@ for ii = 1:numel(D)
     stretchtimes = time(abs(vmt) > vthr);
     stretchint = stretchtimes(2:end) - stretchtimes(1:end - 1); % find the intervals between stretch
     startinds = find(stretchint > 1.5); % take the intervals that are >1.5s
-    startTimes = [0 stretchtimes(startinds+1) - 0.75]; % convert to time points corresponding with the start of a stretch
-    stopTimes = [stretchtimes(startinds)+0.75 time(end)]; % time pts corresponding to end of stretch
+    startTimes = [stretchtimes(1) stretchtimes(startinds+1)] - 0.75; % convert to time points corresponding with the start of a stretch
+    stopTimes = [stretchtimes(startinds) stretchtimes(end)] + 0.75; % time pts corresponding to end of stretch
     % plot to check if needed
 %     plot(time, vmt)
 %     hold on
@@ -62,50 +79,45 @@ for ii = 1:numel(D)
     
     % loop through stretch periods to segment trials
     for jj = 1:numel(startTimes)
+        
+        % choose spike channel
+        if check == 1
+            figure('Position', [0 0 800 800])
+            subplot(411)
+            plot(time, Lmt)
+            xlim([startTimes(jj) stopTimes(jj)])
+            subplot(412)
+            plot(spikes1, ifr1, '.k')
+            xlim([startTimes(jj) stopTimes(jj)])
+            title('Ch9')
+            subplot(413)
+            plot(spikes2, ifr2, '.k')
+            xlim([startTimes(jj) stopTimes(jj)])
+            title('Ch11')
+            subplot(414)
+            plot(spikes3, ifr3, '.k')
+            xlim([startTimes(jj) stopTimes(jj)])
+            title('Ch12')
+            
+            liststr = {'Ch9', 'Ch11', 'Ch12'};
+            [index, ~] = listdlg('ListString', liststr);
+            spiketimes = data.(liststr{index}).times;
+        else
+            spiketimes = data.Ch9.times;
+        end
+        ifr = spikes2ifr(spiketimes);
+            
+        % segment the data for th individual trial
         win = time > startTimes(jj) & time < stopTimes(jj);
-        % save the recorded data
         recdata.Lmt = Lmt(win);
         recdata.Fmt = Fmt(win);
         recdata.time = time(win) - startTimes(jj);
         
-        % choose spike sorting channel if there are multiple
-        if isfield(data, 'Ch12')
-            st1 = data.Ch11.times;
-            ifr1 = [1./(st1(2:end) - st1(1:end-1)); 0];
-            st2 = data.Ch12.times;
-            ifr2 = [1./(st2(2:end) - st2(1:end-1)); 0];
-            
-            figure('Position', [1000 600 600 600])
-            subplot(311)
-            plot(time, Lmt)
-            xlim([startTimes(jj) stopTimes(jj)])
-            subplot(312)
-            plot(st1, ifr1, '.k')
-            xlim([startTimes(jj) stopTimes(jj)])
-            title('Ch11')
-            subplot(313)
-            plot(st2, ifr2, '.k')
-            xlim([startTimes(jj) stopTimes(jj)])
-            title('Ch12')
-            
-            channelstr = {'Ch11', 'Ch12'};
-            [chanindex, ~] = listdlg('ListString', channelstr);
-            if chanindex == 1
-                spiketimes = st1;
-            elseif chanindex == 2
-                spiketimes = st2;
-            end
-        else
-            spiketimes = data.Ch11.times;
-        end
-        ifr = [1./(spiketimes(2:end) - spiketimes(1:end-1)); 0];
-        
-        % save spiketimes data
         spikewin = spiketimes > startTimes(jj) & spiketimes < stopTimes(jj);
         recdata.spiketimes = spiketimes(spikewin) - startTimes(jj);
         recdata.ifr = ifr(spikewin);
-        
-        figure('Position', [1000 600 600 600])
+%         
+        figure('Position', [0 0 800 800])
         subplot(311)
         plot(recdata.time, recdata.Lmt)
         ax = gca;
@@ -123,14 +135,14 @@ for ii = 1:numel(D)
         elseif index == 2
             continue
         end
-        
+%         
         % save the file with the time point as a parameter so it can be
         % checked against original files
         parameters.startT = floor(startTimes(jj));
         savename = [D(ii).name(1:end-4) '_' num2str(floor(startTimes(jj))) 's'];
         save([savedir filesep savename '.mat'], 'parameters', 'recdata')
         
-        clear recdata spiketimes st1 st2 ifr1 ifr2 ifr
+        clear recdata spiketimes 
         close all
     end
     clear parameters data
