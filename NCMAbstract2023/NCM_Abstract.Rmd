@@ -21,23 +21,26 @@ NYdata = subset(NYdata, NYdata$type == 'ramp')
 kFModel <- data %>% lmerTest::lmer(formula = kF ~ aff + (1|ID))
 summary(kFModel)
 kYModel <- data %>% lmerTest::lmer(formula = kY ~ aff + (1|ID))
-summary(kFModel)
+summary(kYModel)
 
 x1 = data$R2[data$aff == 'IA']
 y1 = data$R2[data$aff == 'II']
 R2Model <- t.test(x1, y1, paired = F)
-summary(R2Model)
+R2Model
 ```
 # Plot
 ```{r}
 kFplot <- data %>% ggplot(aes(aff, kF)) + 
-  geom_boxplot(aes(color = ID), width = .5)
+  geom_boxplot(aes(color = ID), width = .5) +
+  theme_bw()
 kYplot <- data %>% ggplot(aes(aff, kY)) + 
-  geom_boxplot(aes(color = ID), width = .5)
-VAFplot <- data %>% ggplot(aes(aff, R2)) + 
-  geom_boxplot(width = .5)
+  geom_boxplot(aes(color = ID), width = .5) +
+  theme_bw()
+R2plot <- data %>% ggplot(aes(aff, R2)) + 
+  geom_boxplot(width = .5) +
+  theme_bw()
 
-ggarrange(kFplot, kYplot, VAFplot, nrow = 1, common.legend = T, legend = 'bottom')
+ggarrange(kFplot, kYplot, R2plot, nrow = 1, common.legend = T, legend = 'bottom')
 ggsave('~/Documents/NCMFig2.eps', device = 'eps')
 ```
 
@@ -51,10 +54,13 @@ t.test(IIdata$R2, IIdataNY$R2, paired = T)
 
 kF_II_plot <- ggplot(data = NULL, aes(x = IIdata$kF, y = IIdataNY$kF))+ 
   geom_segment(aes(x = 0, y = 0, xend = 500, yend = 500)) +
-  geom_point()
+  geom_point() +
+  theme_bw()
 R2_II_plot <- ggplot(data = NULL, aes(x = IIdata$R2, y = IIdataNY$R2)) +
   geom_segment(aes(x = 0, y = 0, xend = 1, yend = 1)) +
-  geom_point()
+  geom_point() +
+  theme_bw()
 
 ggarrange(kF_II_plot, R2_II_plot, nrow = 1)
+ggsave('~/Documents/NCMFig3.eps', device = 'eps')
 ```
