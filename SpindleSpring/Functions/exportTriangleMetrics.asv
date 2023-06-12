@@ -8,8 +8,7 @@ ifr = data.ifr;
 ibwin = st > -0.04 & st < 0.04;
 ibst = st(ibwin);
 ibifr = ifr(ibwin);
-[iba, ibi] = max(ibifr); % index and magitude of IB
-ibt = ibst(ibi); % convert index to time
+[iba, ibt] = max(ibifr);
 
 % dynamic response
 drwin = st > 0.05 & st < 0.72;
@@ -34,12 +33,10 @@ ifrMetrics.s1ifr = s1ifr;
 ifrMetrics.s2st = s2st;
 ifrMetrics.s2ifr = s2ifr;
 % classify IB
-if iba < drifr(1)
+if iba > drifr(1)
     ifrMetrics.triIB = 0;
 else
-    ifrMetrics.triIB = iba;
-end
-ifrMetrics.ibt = ibt;
+ifrMetrics.triIB = iba;
 ifrMetrics.trisc1 = length(s1st);
 ifrMetrics.trisc2 = length(s2st);
 ifrMetrics.trimifr1 = mean(s1ifr);

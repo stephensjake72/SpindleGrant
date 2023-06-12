@@ -19,17 +19,10 @@ plotcount = 1;
 for ii = 1:length(D)
     data = load([path filesep D(ii).name]);
     
-    % check stetch type
+    % loa
     type = data.parameters.type;
-    % fit model
     models = fitmodels(data.procdata, type);
-    % save
-    procdata = data.procdata;
-    parameters = data.parameters;
-    stiffness = data.stiffness;
-    ifrMetrics = data.ifrMetrics;
-    save([savedir filesep D(ii).name], 'procdata', 'parameters', ...
-        'stiffness', 'ifrMetrics', 'models')
+    save(summaryTable.address{ii}, 'models', '-append')
         
     if plotcount <= 50
         Lmtst = interp1(expdata.time, expdata.Lmt, expdata.spiketimes);
@@ -88,3 +81,5 @@ for ii = 1:length(D)
     end
     clear models
 end
+%%
+writetable(summaryTable, 'C:\\Users\Jake\Documents\Data\SpindleSpringSummary.csv')

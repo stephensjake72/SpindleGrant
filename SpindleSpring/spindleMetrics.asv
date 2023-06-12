@@ -19,22 +19,22 @@ end
 %%
 clc
 close all
-for ii = 601:length(D)
+for ii = 501:600%length(D)
     disp(ii)
     data = load([path filesep D(ii).name]);
     switch data.parameters.type
         case 'ramp'
             ifrMetrics = exportRampMetrics(data.procdata);
-%             figure('Position', [100 100 500 500])
-%             hold on
-%             plot(data.procdata.spiketimes, data.procdata.ifr, '.k')
-%             plot(ifrMetrics.ibt, ifrMetrics.IBA, '.r')
-%             yline(ifrMetrics.DRA)
-%             yline(ifrMetrics.SRA)
-%             title(D(ii).name, 'Interpreter', 'none')
-%             
-%             [text, ~] = listdlg('ListString', {''});
-%             close
+            figure('Position', [100 100 500 500])
+            hold on
+            plot(data.procdata.spiketimes, data.procdata.ifr, '.k')
+            plot(ifrMetrics.ibt, ifrMetrics.IBA, '.r')
+            yline(ifrMetrics.DRA)
+            yline(ifrMetrics.SRA)
+            title(D(ii).name, 'Interpreter', 'none')
+            
+            [text, ~] = listdlg('ListString', {''});
+            close
         case 'sine'
             ifrMetrics = exportSineMetrics(data.procdata);
 %             figure

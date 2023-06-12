@@ -9,8 +9,8 @@ if isempty(id)
     stiffness = 0;
     return
 end
-% take 10 samples around the threshold point
-ids = (id-5):(id+5);
+% take window around the threshold point
+ids = (id-50):(id+50);
 
 % fit 2nd order polynomial to the points
 pmt = polyfit(Lmt(ids), Fmt(ids), 2);

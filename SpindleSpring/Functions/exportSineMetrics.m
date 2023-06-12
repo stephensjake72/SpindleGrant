@@ -1,33 +1,30 @@
-function ifrMetrics = exportSineMetrics(data, amp)
-Lmt = data.Lmt;
+function ifrMetrics = exportSineMetrics(data)
 time = data.time;
 st = data.spiketimes;
 ifr = data.ifr;
 
-[~, locs] = findpeaks(Lmt, ...
-    'MinPeakHeight', 0.9*amp + Lmt(1), ...
-    'MinPeakProminence', 0.9*amp);
-pktimes = time(locs);
-cycleT = pktimes(2) - pktimes(1);
+cyclebreaks = 0:0.5:max(time); % start times of each cycle
 
-ifrpks = locs; % use locs to make a vector the right length
-ifrpktimes = locs;
-for jj = 1:numel(locs)
-    tStart = pktimes(jj) - cycleT/3;
-    tStop = pktimes(jj) + cycleT/3;
+cyclepeaks = zeros(1, length(cyclebreaks) - 1); % use the peaks to make a vector the right length
+cyclepeaktimes = zeros(1, length(cyclebreaks) - 1);
+cyclespikect = zeros(1, length(cyclebreaks) - 1);
 
+for jj = 1:numel(cyclebreaks)-1
+    tStart = cyclebreaks(jj);
+    tStop = cyclebreaks(jj+1);
+    
     win = (st >= tStart & st <= tStop);
     stwin = st(win);
     [ifrpk, id] = max(ifr(win));
-    ifrpks(jj) = ifrpk;
-    ifrpktimes(jj) = stwin(id);
+    if ~isempty(ifrpk)
+        cyclepeaks(jj) = ifrpk;
+        cyclepeaktimes(jj) = stwin(id);
+        cyclespikect(jj) = length(stwin);
+    end
 end
 
-stretchifr = ifr(st >= pktimes(1) + cycleT/2);
-meanifr = mean(stretchifr);
-
-ifrMetrics.peakifr = median(ifrpks(2:end));
-ifrMetrics.ifrpks = ifrpks;
-ifrMetrics.ifrpktimes = ifrpktimes;
-ifrMetrics.meanifr = meanifr;
-ifrMetrics.spikect = length(data.spiketimes);
+ifrMetrics.peakifr = mean(cyclepeaks(2:end));
+ifrMetrics.ifrpks = cyclepeaks(cyclepeaks ~= 0);
+ifrMetrics.ifrpktimes = cyclepeaktimes(cyclepeaktimes ~= 0);
+ifrMetrics.meanifr = mean(ifr(st <= cyclebreaks(end)));
+ifrMetrics.cyclespikect = mean(cyclespikect(cyclespikect ~= 0));

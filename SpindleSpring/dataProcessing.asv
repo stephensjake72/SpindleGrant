@@ -108,7 +108,7 @@ for ii = 1:numel(D)
     procdata.time = time;
     procdata.spiketimes = spiketimes(spikekeep);
     procdata.ifr = ifr(spikekeep);
-    procdata.act = data.recdata.act - tstart;
+    procdata.act = data.recdata.act - ;
     
     % save
     parameters = data.parameters;

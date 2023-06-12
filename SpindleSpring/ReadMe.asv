@@ -28,18 +28,9 @@
 
 % Then run trimActiveSines.m. In this script, if the sinusoid is an active
 % workloop with ventral root stimulation, it will ignore the data after the
-% VR stim begins and only keep the passive cycles.
+% VR stim begins and only keep 
 
-% Then run stiffnessAnalysis.m which computes the MTU stiffness (dF/dLMTU),
-% fascicle stiffness (dF/dLFAS), and relative fascicle displacement
-% (dLFAS/dLMTU) at the respective force thresholds.
-
-% Next, run spindleMetrics.m, which will compute the firing rate metrics
-% analyzed in the manuscript. Details for how these metrics are computed
-% can be found in the functions exportRampMetrics.m,
-% exportTriangleMetrics.m, and exportSineMetrics.m
-
-% Next, run fitRegs.m
+% Then run stiffnessAnalysis.m
 
 
 % Next run writeSumTable.m to create a table of all the file addresses,

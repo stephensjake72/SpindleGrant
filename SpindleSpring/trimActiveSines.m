@@ -1,76 +1,71 @@
-% trim active sines
+% Script to trim the active components of the work loop data
+% Author: JDS
+% Updated: 5/24/23
 clc
 clear
 close all
-addpath(genpath('Functions'))
-load('summaryTable.mat')
+
+% access functions
+addpath(genpath('Functions'));
+
+% Load data files
+source = '/Volumes/labs/ting/shared_ting/Jake/';
+path = uigetdir(source);
+D = dir(path);
+savedir = [path(1:find(path == '/', 1, 'last')) 'procdata_fixed_sines'];
+if ~exist(savedir, 'dir')
+    mkdir(savedir)
+end
+
+D = D(3:end);
 %%
-for ii = 1:height(summaryTable)
-    check1 = strcmp(summaryTable.type{ii}, 'sine');
-    check2 = summaryTable.passive{ii} == 0;
-    if check1 && check2
-        data = load(summaryTable.address{ii});
-
-        % find peaks
-        [pks, locs] = findpeaks(data.procdata.Lmt, ...
-            'MinPeakHeight', data.procdata.Lmt(1) + 1.5);
-        badtrial = data.badtrial;
-        if isempty(pks)
-            badtrial = 1;
-            save(summaryTable.address{ii}, 'badtrial', '-append')
-            continue
+close all
+for ii = 1:numel(D)
+    disp(ii)
+    data = load([path filesep D(ii).name]);
+    
+    if strcmp(data.parameters.type, 'sine')
+        procdata = data.procdata;
+        acttimes = procdata.act;
+        actrate = 1./(acttimes(2:end) - acttimes(1:end-1));
+        
+        if find(actrate > 5) > 0
+            stopT = 2.25; %acttimes(find(actrate > 60, 1, 'first'));
+        else
+            stopT = data.procdata.time(end);
         end
-        pktimes = data.procdata.time(locs);
-        cycleT = pktimes(2) - pktimes(1);
-        stopT = pktimes(4) + cycleT/2;
-
-        actwin = data.recdata.act(data.recdata.act < stopT);
-        if ~isempty(actwin)
-            continue
-        end
-
-        startT = data.procdata.time(1);
-        keep = data.procdata.time <= stopT;
-        spikekeep = data.procdata.spiketimes >= startT & data.procdata.spiketimes <= stopT;
-
-        trimdata.time = data.procdata.time(keep);
-        trimdata.Lmt = data.procdata.Lmt(keep);
-        trimdata.Fmt = data.procdata.Fmt(keep);
-        trimdata.Lf = data.procdata.Lf(keep);
-        trimdata.vmt = data.procdata.vmt(keep);
-        trimdata.ymt = data.procdata.ymt(keep);
-        trimdata.vf = data.procdata.vf(keep);
-        trimdata.amt = data.procdata.amt(keep);
-        trimdata.af = data.procdata.af(keep);
-        trimdata.spiketimes = data.procdata.spiketimes(spikekeep);
-        trimdata.ifr = data.procdata.ifr(spikekeep);
-
-        trimdatacheck = 1;
-        if isempty(trimdata.spiketimes)
-            badtrial = 1;
-        end
-
-        save(summaryTable.address{ii}, 'trimdata', 'trimdatacheck', 'badtrial', '-append')
-        figure
+        
+        keep = procdata.time < stopT;
+        procdata.time = procdata.time(keep);
+        procdata.Lmt = procdata.Lmt(keep);
+        procdata.Fmt = procdata.Fmt(keep);
+        procdata.Lf = procdata.Lf(keep);
+        procdata.vmt = procdata.vmt(keep);
+        procdata.ymt = procdata.ymt(keep);
+        procdata.vf = procdata.vf(keep);
+        procdata.spiketimes = procdata.spiketimes(procdata.spiketimes < stopT);
+        procdata.ifr = procdata.ifr(procdata.spiketimes < stopT);
+        procdata.act = procdata.act(procdata.act < stopT);
+        
         subplot(411)
-        plot(trimdata.time, trimdata.Lmt)
-        yyaxis right
-        plot(trimdata.time, trimdata.vmt)
-        ax = gca;
+        hold on
+        plot(procdata.time, procdata.Lmt)
         subplot(412)
-        plot(trimdata.time, trimdata.Lf)
-        yyaxis right
-        plot(trimdata.time, trimdata.vf)
-        xlim(ax.XAxis.Limits)
+        hold on
+        plot(procdata.time, procdata.Fmt)
         subplot(413)
-        plot(trimdata.time, trimdata.Fmt)
-        yyaxis right
-        plot(trimdata.time, trimdata.ymt)
+        hold on
+        plot(procdata.time, procdata.Lf)
         subplot(414)
-        plot(trimdata.spiketimes, trimdata.ifr, '.k')
-        xlim(ax.XAxis.Limits)
+        hold on
+        plot(procdata.spiketimes, procdata.ifr, '.k')
+        
+        parameters = data.parameters;
+    else
+        procdata = data.procdata;
+        parameters = data.parameters;
     end
+    save([savedir filesep D(ii).name], 'procdata', 'parameters')
+    clear parameters procdata
 end
 %%
-summaryTable = tableAppend(summaryTable, {'trimdatacheck', 'badtrial'});
-save('summaryTable.mat', 'summaryTable')

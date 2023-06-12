@@ -1,67 +1,41 @@
 clc
 clear
 close all
-load('summaryTable.mat')
 addpath(genpath('Functions'))
 
-for ii = 1:height(summaryTable)
-    check1 = summaryTable.passive{ii} == 1;
-    check2 = summaryTable.trimdatacheck{ii} == 1;
-    check3 = summaryTable.badtrial{ii} == 0;
-    if (check1 || check2) && check3
-    
-        switch summaryTable.type{ii}
-            case 'ramp'
-                if summaryTable.amp{ii} == 3
-                    data = load(summaryTable.address{ii});
-                    thr = .5;
-                    stiffness = computeStiffness(data.procdata, thr);
-                    
-%                     dx = [-.1 0 .1];
-%                     dF = stiffness.kMTU*dx;
-%                     hold on
-%                     plot(data.procdata.Lmt, data.procdata.Fmt, 'k')
-%                     plot(stiffness.Lmtcenter + dx, stiffness.Fmtcenter + dF, 'r')
-                    save(summaryTable.address{ii}, 'stiffness', '-append')
-                    clear stiffness
-                end
-            case 'triangle'
-                if summaryTable.amp{ii} == 3
-                    data = load(summaryTable.address{ii});
-                    
-                    thr = .5;
-                    stiffness = computeStiffness(data.procdata, thr);
-%                     
-%                     dx = [-.1 0 .1];
-%                     dF = stiffness.kMTU*dx;
-%                     
-%                     hold on
-%                     plot(data.procdata.Lmt, data.procdata.Fmt, 'k')
-%                     plot(stiffness.Lmtcenter + dx, stiffness.Fmtcenter + dF, 'r')
-                    save(summaryTable.address{ii}, 'stiffness', '-append')
-                    clear stiffness
-                end
-            case 'sine'
-                if summaryTable.trimdatacheck{ii} == 1
-                    data = load(summaryTable.address{ii});
-                    
-                    thr = .4;
-                    stiffness = computeStiffness(data.trimdata, thr);
-                    
-%                     dx = [-.1 0 .1];
-%                     dF = stiffness.kMTU*dx;
-%                     
-%                     hold on
-%                     plot(data.trimdata.Lmt, data.trimdata.Fmt, 'k')
-%                     plot(stiffness.Lmtcenter + dx, stiffness.Fmtcenter + dF, 'r')
-                    save(summaryTable.address{ii}, 'stiffness', '-append')
-                    clear stiffness
-                end
-        end
-    end
+source = '/Volumes/labs/ting/shared_ting/Jake/Spindle spring data/';
+path  = uigetdir(source);
+D = dir(path);
+D = D(3:end);
+
+savedir = [path(1:find(path == '/', 1, 'last')) 'procdata_w_stiffness'];
+if ~exist(savedir, 'dir')
+    mkdir(savedir)
 end
 %%
-vars = {'kMTU', 'kFas', 'FasExc', 'dLfdLmt'};
-summaryTable = tableAppend(summaryTable, vars);
-save('summaryTable.mat', 'summaryTable')
-writetable(summaryTable, 'C:\\Users\Jake\Documents\Data\SpindleSpringSummary.csv')
+for ii = 1:length(D)
+    data = load([D(ii).folder filesep D(ii).name]);
+    
+    switch data.parameters.type
+        case 'ramp'
+            thr = .5;
+        case 'triangle'
+            thr = .4;
+        case 'sine'
+            thr = .4;
+    end
+    stiffness = computeStiffness(data.procdata, thr);
+    
+%     if strcmp(data.parameters.type, 'triangle')
+%         dx = [-.1 0 .1];
+%         dF = stiffness.kMTU*dx;
+%         hold on
+%         plot(data.procdata.Lmt, data.procdata.Fmt, 'k')
+%         plot(stiffness.Lmtcenter + dx, stiffness.Fmtcenter + dF, 'r')
+%     end
+    % save
+    procdata = data.procdata;
+    parameters = data.parameters;
+    save([savedir filesep D(ii).name], 'stiffness', 'procdata', 'parameters')
+    clear stiffness thr data
+end

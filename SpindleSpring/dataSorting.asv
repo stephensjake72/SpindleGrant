@@ -21,7 +21,7 @@ D = D(3:end);
 %%
 close all
 
-for ii =  36:length(D) %1:numel(D)
+for ii =  35 %1:numel(D)
     disp(D(ii).name)
     data = load([D(ii).folder filesep D(ii).name]);
     
@@ -79,7 +79,7 @@ for ii =  36:length(D) %1:numel(D)
         plot(recdata.time, recdata.Fmt)
         xlim(ax.XAxis.Limits)
         subplot(414)
-        plot(recdata.act, ones(1, numel(recdata.act)), '|r')
+        plot(alpha, ones(1, numel(alpha)), '|r')
         xlim(ax.XAxis.Limits)
         
         text1 = {'keep', 'skip'};
@@ -116,7 +116,7 @@ for ii =  36:length(D) %1:numel(D)
             spiketimes = data.(spikefields{index2}).times;
             clear tempst tempifr index2
         end
-        close all
+        close
         spikewin = spiketimes >= startTimes(jj) & spiketimes < stopTimes(jj);
         recdata.spiketimes = spiketimes(spikewin) - startTimes(jj);
         recdata.ifr = spikes2ifr(recdata.spiketimes);
