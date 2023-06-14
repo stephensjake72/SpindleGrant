@@ -11,14 +11,12 @@ Fmtst = interp1(time, data.Fmt, st);
 
 switch type
     case 'ramp'
-        startT = 0.15;
+        keep = st > 0.155 & st < 1.3;
     case 'triangle'
-        startT = 1.7;
+        keep = st > 1.4 & st < 4.2;
     case 'sine'
-        startT = 0.5;
+        keep = st > 0.5;
 end
-
-keep = st > startT;
 
 ifr = ifr(keep);
 Lmtst = Lmtst(keep);

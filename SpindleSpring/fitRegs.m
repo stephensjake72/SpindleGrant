@@ -32,6 +32,7 @@ for ii = 1:length(D)
         'stiffness', 'ifrMetrics', 'models')
         
     if plotcount <= 50
+        expdata = data.procdata;
         Lmtst = interp1(expdata.time, expdata.Lmt, expdata.spiketimes);
         Lfst = interp1(expdata.time, expdata.Lf, expdata.spiketimes);
         vfst = interp1(expdata.time, expdata.vf, expdata.spiketimes);
