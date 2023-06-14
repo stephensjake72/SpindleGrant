@@ -11,11 +11,11 @@ Fmtst = interp1(time, data.Fmt, st);
 
 switch type
     case 'ramp'
-        keep = st > 0.155 & st < 1.3;
+        keep = st > 0.155 & st < 1.3; % hold phase
     case 'triangle'
-        keep = st > 1.4 & st < 4.2;
+        keep = st > 1.4 & st < 4.2; % 2nd and 3rd stretches
     case 'sine'
-        keep = st > 0.5;
+        keep = st > 0.5; % after first stretch
 end
 
 ifr = ifr(keep);
