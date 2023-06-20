@@ -115,8 +115,9 @@ sinedf %>% lmerTest::lmer(formula = meanifr ~ KT + (1|unID)) %>% summary()
 describe(sinedf[c('rLmt', 'rLf', 'rFmt', 'rvmt', 'rvf')])
 # compare regression slopes
 sinedf %>% lmerTest::lmer(formula = mLf ~ KT + (1|unID)) %>% summary()
-sinedf %>% lmerTest::lmer(formula = rvf ~ KT + (1|unID)) %>% summary()
-sinedf %>% lmerTest::lmer(formula = mFmt + KT + (1|unID)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = mvf ~ KT + (1|unID)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = mFmt ~ KT + (1|unID)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = bFmt ~ KT + (1|unID)) %>% summary()
 
 # Sines IFR comparison plots
 sinepkplot <- sinedf %>% ggplot(aes(x = KT, y = peakifr)) +
@@ -154,9 +155,13 @@ describe(rampdf[c('rLmt', 'rLf', 'rFmt', 'rvmt', 'rvf')])
 # compare regression slopes
 rampdf %>% lmerTest::lmer(formula = mLf ~ KT + (1|unID)) %>% summary()
 rampdf %>% lmerTest::lmer(formula = mLmt ~ KT + (1|unID)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = rvf ~ KT + (1|unID)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = rvmt ~ KT + (1|unID)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = mFmt + KT + (1|unID)) %>% summary()
+rampdf %>% lmerTest::lmer(formula = mvf ~ KT + (1|unID)) %>% summary()
+rampdf %>% lmerTest::lmer(formula = mvmt ~ KT + (1|unID)) %>% summary()
+rampdf %>% lmerTest::lmer(formula = mFmt ~ KT + (1|unID)) %>% summary()
+rampdf$mFmt[rampdf$KT == 'T'] %>% describe() 
+rampdf$mFmt[rampdf$KT == 'C'] %>% describe() 
+rampdf$rFmt[rampdf$KT == 'T'] %>% describe() 
+rampdf$rFmt[rampdf$KT == 'C'] %>% describe() 
 
 # Ramps IFR comparison plots
 rampIBplot <- rampdf %>% ggplot(aes(x = KT, y = IBA)) +
@@ -202,9 +207,9 @@ describe(tridf[c('rLmt', 'rLf', 'rFmt', 'rvmt', 'rvf')])
 # regression slope comparisons
 tridf %>% lmerTest::lmer(formula = mLf ~ KT + (1|unID)) %>% summary()
 tridf %>% lmerTest::lmer(formula = mLmt ~ KT + (1|unID)) %>% summary()
-tridf %>% lmerTest::lmer(formula = rvf ~ KT + (1|unID)) %>% summary()
-tridf %>% lmerTest::lmer(formula = rvmt ~ KT + (1|unID)) %>% summary()
-tridf %>% lmerTest::lmer(formula = mFmt + KT + (1|unID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = mvf ~ KT + (1|unID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = mvmt ~ KT + (1|unID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = mFmt ~ KT + (1|unID)) %>% summary()
 
 # plotting
 triIBplot <- tridf %>% ggplot(aes(x = KT, y = triIB)) +
