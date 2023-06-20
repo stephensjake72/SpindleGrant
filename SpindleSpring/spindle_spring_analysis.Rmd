@@ -18,38 +18,31 @@ library(lmerTest)
 library(psych)
 library(sjPlot)
 library(rstatix)
-source('~/GitHub/SpindleSpringProject/functions.R')
+# source('~/GitHub/SpindleGrant/SpindleSpring/functions.R')
 ```
 
 ##Parse data frames
 ```{r}
-df = read.csv('C://Users/Jake/Documents/Data/SpindleSpringSummary.csv')
+df = read.csv('/Users/jacobstephens/Documents/summaryTable-19-Jun-2023.csv')
 
 #global filters
-df <- subset(df, df$badtrial == 0) # ignore bad trials
-df <- subset(df, df$KT != 'A' & df$KT != 'B') # only take ctrl and group C for SEE
-df <- subset(df, df$aff == 'IA')
 df$KT = factor(df$KT, levels = c("T", "C")) # set KT as a factor to make analysis easier later on
 
 # create unique cell vector
-unID = df$address
+unID = df$Address
 df <- cbind(df, unID)
 for (i in 1:dim(df)[1]){
-  df$unID[i] = paste(df$animal[i], df$cell[i], sep = '_')
+  df$unID[i] = paste(df$ID[i], df$cell[i], sep = 'cell')
 }
 
 # Parse
 tridf <- df[df$type == 'triangle', ] # data frame of triangles
 rampdf <- df[df$type == 'ramp', ] # ramps
-sinedf <- df[df$trimdatacheck == 1, ] # sines
+sinedf <- df[df$type == 'sine', ] # sines
 
-tridf <- subset(tridf, tridf$amp == 3)
 scHD <- tridf$trisc1 - tridf$trisc2
 mifrHD <- tridf$trimifr1 - tridf$trimifr2
 tridf <- cbind(tridf, scHD, mifrHD)
-
-rampdf <- subset(rampdf, rampdf$amp == 3)
-
 
 # Keep afferents with data in both CTRL and SEE
 triTaffs <- unique(tridf$unID[which(tridf$KT == 'T')]) # find afferents with control data
@@ -71,43 +64,45 @@ sinedf <- subset(sinedf, is.element(sinedf$unID, sinekeepaffs))
 # Fig 1
 ```{r}
 # Stiffness analysis
-rampdf %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|animal)) %>% summary()
-tridf %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|animal)) %>% summary()
-sinedf %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|animal)) %>% summary()
+# use linear mixed model with SEE as a fixed effect and individual animal as
+# a random effect
+rampdf %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|ID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|ID)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|ID)) %>% summary()
 
-rampdf %>% lmerTest::lmer(formula = kMTU ~ KT + (1|animal)) %>% summary()
-tridf %>% lmerTest::lmer(formula = kMTU ~ KT + (1|animal)) %>% summary()
-sinedf %>% lmerTest::lmer(formula = kMTU ~ KT + (1|animal)) %>% summary()
+rampdf %>% lmerTest::lmer(formula = kMTU ~ KT + (1|ID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = kMTU ~ KT + (1|ID)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = kMTU ~ KT + (1|ID)) %>% summary()
 
-rampdf %>% lmerTest::lmer(formula = kFas ~ KT + (1|animal)) %>% summary()
-tridf %>% lmerTest::lmer(formula = kFas ~ KT + (1|animal)) %>% summary()
-sinedf %>% lmerTest::lmer(formula = kFas ~ KT + (1|animal)) %>% summary()
+rampdf %>% lmerTest::lmer(formula = kFas ~ KT + (1|ID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = kFas ~ KT + (1|ID)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = kFas ~ KT + (1|ID)) %>% summary()
 
 # stiffness comparison plots
 dLfdLmtrampplot <- rampdf %>%
   ggplot(aes(x = KT, y = dLfdLmt)) + 
   geom_boxplot() + 
   geom_beeswarm() + 
-  geom_smooth(aes(group = animal), method = 'lm', se = F) +
+  geom_smooth(aes(group = ID), method = 'lm', se = F) +
   ylim(c(0, .8))
 
 kMTUrampplot <- rampdf %>%
   ggplot(aes(x = KT, y = kMTU)) + 
   geom_boxplot() + 
   geom_beeswarm() + 
-  geom_smooth(aes(group = animal), method = 'lm', se = F) +
+  geom_smooth(aes(group = ID), method = 'lm', se = F) +
   ylim(c(0, .8))
 
 kFasrampplot <- rampdf %>%
   ggplot(aes(x = KT, y = kFas)) + 
   geom_boxplot() + 
   geom_beeswarm() + 
-  geom_smooth(aes(group = animal), method = 'lm', se = F) +
+  geom_smooth(aes(group = ID), method = 'lm', se = F) +
   ylim(c(0, 2))
 
 ggarrange(dLfdLmtrampplot, kMTUrampplot, kFasrampplot, nrow = 1)
-ggsave('C:/Users/Jake/Documents/Lab/fig1stats.eps', device = 'eps', plot = last_plot())
-ggsave('C:/Users/Jake/Documents/Lab/fig1stats.jpg', device = 'jpg', plot = last_plot())
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig1stats.eps', device = 'eps', plot = last_plot())
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig1stats.jpg', device = 'jpg', plot = last_plot())
 ```
 
 # Fig 2
@@ -116,8 +111,12 @@ ggsave('C:/Users/Jake/Documents/Lab/fig1stats.jpg', device = 'jpg', plot = last_
 sinedf %>% lmerTest::lmer(formula = peakifr ~ KT + (1|unID)) %>% summary()
 sinedf %>% lmerTest::lmer(formula = meanifr ~ KT + (1|unID)) %>% summary()
 
-# Sines regression comparisons
+# Sine regression R2
 describe(sinedf[c('rLmt', 'rLf', 'rFmt', 'rvmt', 'rvf')])
+# compare regression slopes
+sinedf %>% lmerTest::lmer(formula = mLf ~ KT + (1|unID)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = rvf ~ KT + (1|unID)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = mFmt + KT + (1|unID)) %>% summary()
 
 # Sines IFR comparison plots
 sinepkplot <- sinedf %>% ggplot(aes(x = KT, y = peakifr)) +
@@ -135,9 +134,9 @@ sinemeanplot <- sinedf %>% ggplot(aes(x = KT, y = meanifr)) +
   ylim(c(0, 300)) +
   theme_bw()
 ggarrange(sinepkplot, sinemeanplot, nrow = 2, ncol= 1, legend = F)
-ggsave('C:/Users/Jake/Documents/Lab/fig2stats.eps', device = 'eps', plot = last_plot(), 
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig2stats.eps', device = 'eps', plot = last_plot(), 
        width = 2, height = 4, units = 'in')
-ggsave('C:/Users/Jake/Documents/Lab/fig2stats.jpg', device = 'jpg', plot = last_plot())
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig2stats.jpg', device = 'jpg', plot = last_plot())
 ```
 
 # Fig 3
@@ -152,6 +151,12 @@ rampdf$IBA[rampdf$KT == 'C'] %>% describe()
 
 # Ramps regressions
 describe(rampdf[c('rLmt', 'rLf', 'rFmt', 'rvmt', 'rvf')])
+# compare regression slopes
+rampdf %>% lmerTest::lmer(formula = mLf ~ KT + (1|unID)) %>% summary()
+rampdf %>% lmerTest::lmer(formula = mLmt ~ KT + (1|unID)) %>% summary()
+rampdf %>% lmerTest::lmer(formula = rvf ~ KT + (1|unID)) %>% summary()
+rampdf %>% lmerTest::lmer(formula = rvmt ~ KT + (1|unID)) %>% summary()
+rampdf %>% lmerTest::lmer(formula = mFmt + KT + (1|unID)) %>% summary()
 
 # Ramps IFR comparison plots
 rampIBplot <- rampdf %>% ggplot(aes(x = KT, y = IBA)) +
@@ -176,9 +181,9 @@ rampDIplot <- rampdf %>% ggplot(aes(x = KT, y = DI)) +
   ylim(c(0, 300)) +
   theme_bw()
 ggarrange(rampIBplot, rampDRplot, rampDIplot, nrow = 3, legend = F)
-ggsave('C:/Users/Jake/Documents/Lab/fig3stats.eps', device = 'eps', plot = last_plot(),
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig3stats.eps', device = 'eps', plot = last_plot(),
        width = 2, height = 6, units = 'in')
-ggsave('C:/Users/Jake/Documents/Lab/fig3stats.jpg', device = 'jpg', plot = last_plot())
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig3stats.jpg', device = 'jpg', plot = last_plot())
 ```
 # Triangles analysis
 ```{r}
@@ -191,7 +196,15 @@ tridf %>% lmerTest::lmer(formula = trimifr2 ~ KT + (1|unID)) %>% summary()
 
 tridf %>% lmerTest::lmer(formula = scHD ~ KT + (1|unID)) %>% summary()
 tridf %>% lmerTest::lmer(formula = mifrHD ~ KT + (1|unID)) %>% summary()
+
+# regression R2
 describe(tridf[c('rLmt', 'rLf', 'rFmt', 'rvmt', 'rvf')])
+# regression slope comparisons
+tridf %>% lmerTest::lmer(formula = mLf ~ KT + (1|unID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = mLmt ~ KT + (1|unID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = rvf ~ KT + (1|unID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = rvmt ~ KT + (1|unID)) %>% summary()
+tridf %>% lmerTest::lmer(formula = mFmt + KT + (1|unID)) %>% summary()
 
 # plotting
 triIBplot <- tridf %>% ggplot(aes(x = KT, y = triIB)) +
@@ -244,7 +257,7 @@ trimifrHDplot <- tridf %>% ggplot(aes(x = KT, y = mifrHD)) +
   ylim(c(0, 50)) +
   theme_bw()
 ggarrange(trimifr1plot, trimifr2plot, triIBplot, trisc1plot, trisc2plot, {}, triscHDplot,  trimifrHDplot, nrow = 3, ncol = 3, legend = F)
-ggsave('C:/Users/Jake/Documents/Lab/fig4stats.eps', device = 'eps', plot = last_plot(),
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig4stats.eps', device = 'eps', plot = last_plot(),
        width = 5, height = 8, units = 'in')
-ggsave('C:/Users/Jake/Documents/Lab/fig4stats.jpg', device = 'jpg', plot = last_plot())
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig4stats.jpg', device = 'jpg', plot = last_plot())
 ```

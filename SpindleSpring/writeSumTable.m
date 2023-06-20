@@ -60,4 +60,5 @@ for pp = 1:numel(D)
     end
 end
 %%
-save([savedir filesep filename '.mat'], 'sumTable')
+writetable(sumTable, [savedir filesep filename '.csv'])
+writetable(sumTable, ['/Users/jacobstephens/Documents/' filename '.csv'])
