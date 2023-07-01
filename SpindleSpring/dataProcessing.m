@@ -55,6 +55,7 @@ for ii = 1:numel(D)
     % smooth and get first derivatives with savitsky-golay filter
     fOrder = 2;
     Width = 21;
+    disp(Width/procfs) % window width in s
     [Lf, vf, ~] = sgolaydiff(Lf, fOrder, Width);
     [Lmt, vmt, ~] = sgolaydiff(Lmt, fOrder, Width);
     [Fmt, ymt, ~] = sgolaydiff(Fmt, fOrder, Width);
@@ -112,7 +113,7 @@ for ii = 1:numel(D)
     
     % save
     parameters = data.parameters;
-    save([savedir filesep D(ii).name], 'procdata', 'parameters')
+%     save([savedir filesep D(ii).name], 'procdata', 'parameters')
     
     % plot to check
     switch parameters.type
@@ -128,4 +129,4 @@ for ii = 1:numel(D)
     
     clear tstop tstart
 end
-disp([num2str(Width*1000/procfs) ' ms'])
+% disp([num2str(Width*1000/procfs) ' ms'])

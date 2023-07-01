@@ -66,6 +66,11 @@ sinedf <- subset(sinedf, is.element(sinedf$unID, sinekeepaffs))
 # Stiffness analysis
 # use linear mixed model with SEE as a fixed effect and individual animal as
 # a random effect
+df %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|ID)) %>% summary()
+df %>% lmerTest::lmer(formula = kMTU ~ KT + (1|ID)) %>% summary()
+df %>% lmerTest::lmer(formula = kFas ~ KT + (1|ID)) %>% summary()
+
+# per stretch type
 rampdf %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|ID)) %>% summary()
 tridf %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|ID)) %>% summary()
 sinedf %>% lmerTest::lmer(formula = dLfdLmt ~ KT + (1|ID)) %>% summary()
@@ -82,27 +87,30 @@ sinedf %>% lmerTest::lmer(formula = kFas ~ KT + (1|ID)) %>% summary()
 dLfdLmtrampplot <- rampdf %>%
   ggplot(aes(x = KT, y = dLfdLmt)) + 
   geom_boxplot() + 
-  geom_beeswarm() + 
+  geom_jitter(width = 0.2, height = 0) + 
   geom_smooth(aes(group = ID), method = 'lm', se = F) +
-  ylim(c(0, .8))
+  ylim(c(0, .8)) +
+  theme_bw()
 
 kMTUrampplot <- rampdf %>%
   ggplot(aes(x = KT, y = kMTU)) + 
   geom_boxplot() + 
-  geom_beeswarm() + 
+  geom_jitter(width = 0.2, height = 0) + 
   geom_smooth(aes(group = ID), method = 'lm', se = F) +
-  ylim(c(0, .8))
+  ylim(c(0, .8)) +
+  theme_bw()
 
 kFasrampplot <- rampdf %>%
   ggplot(aes(x = KT, y = kFas)) + 
   geom_boxplot() + 
-  geom_beeswarm() + 
+  geom_jitter(width = 0.2, height = 0) + 
   geom_smooth(aes(group = ID), method = 'lm', se = F) +
-  ylim(c(0, 2))
+  ylim(c(0, 2)) +
+  theme_bw()
 
 ggarrange(dLfdLmtrampplot, kMTUrampplot, kFasrampplot, nrow = 1)
-ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig1stats.eps', device = 'eps', plot = last_plot())
-ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig1stats.jpg', device = 'jpg', plot = last_plot())
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig1stats.eps', device = 'eps', plot = last_plot(), width = 4600, height = 944, units = 'px')
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig1stats.jpg', device = 'jpg', plot = last_plot(), width = 4600, height = 944, units = 'px')
 ```
 
 # Fig 2
@@ -110,6 +118,11 @@ ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig1st
 # Sines IFR comparisons
 sinedf %>% lmerTest::lmer(formula = peakifr ~ KT + (1|unID)) %>% summary()
 sinedf %>% lmerTest::lmer(formula = meanifr ~ KT + (1|unID)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = cyclespikect ~ KT + (1|unID)) %>% summary()
+
+# confirm force and length changes
+sinedf %>% lmerTest::lmer(formula = FasExc ~ KT + (1|unID)) %>% summary()
+sinedf %>% lmerTest::lmer(formula = FasExc ~ KT + (1|unID)) %>% summary()
 
 # Sine regression R2
 describe(sinedf[c('rLmt', 'rLf', 'rFmt', 'rvmt', 'rvf')])
@@ -123,45 +136,47 @@ sinedf %>% lmerTest::lmer(formula = bFmt ~ KT + (1|unID)) %>% summary()
 sinepkplot <- sinedf %>% ggplot(aes(x = KT, y = peakifr)) +
   geom_violin() +
   geom_jitter(width = .1, height = 0) +
-  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  geom_smooth(aes(color = unID, group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 300)) +
+  ylim(c(0, 210)) +
   theme_bw()
 sinemeanplot <- sinedf %>% ggplot(aes(x = KT, y = meanifr)) +
   geom_violin() +
   geom_jitter(width = .1, height = 0) +
-  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  geom_smooth(aes(color = unID, group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 300)) +
+  ylim(c(0, 200)) +
   theme_bw()
-ggarrange(sinepkplot, sinemeanplot, nrow = 2, ncol= 1, legend = F)
-ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig2stats.eps', device = 'eps', plot = last_plot(), 
-       width = 2, height = 4, units = 'in')
-ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig2stats.jpg', device = 'jpg', plot = last_plot())
+ggarrange(sinepkplot, sinemeanplot, nrow = 2, ncol= 1, common.legend = T)
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig2stats.eps', device = 'eps', plot = last_plot(), width = 2, height = 8, units = 'in')
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig2stats.jpg', device = 'jpg', plot = last_plot(), width = 2, height = 8, units = 'in')
 ```
 
 # Fig 3
 ```{r}
 # Ramps IFR comparison
-rampdf %>% lmerTest::lmer(formula = IBA ~ KT + (1|unID)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = DRA ~ KT + (1|unID)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = DI ~ KT + (1|unID)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = SRA ~ KT + (1|unID)) %>% summary()
-rampdf$IBA[rampdf$KT == 'T'] %>% describe() 
-rampdf$IBA[rampdf$KT == 'C'] %>% describe() 
+rampdf %>% lmerTest::lmer(formula = IBA ~ KT + (1|unID)) %>% summary() # IB vs compliance
+rampdf %>% lmerTest::lmer(formula = DRA ~ KT + (1|unID)) %>% summary() # DR vs compliance
+rampdf %>% lmerTest::lmer(formula = DI ~ KT + (1|unID)) %>% summary() # DI vs compliance
+rampdf %>% lmerTest::lmer(formula = SRA ~ KT + (1|unID)) %>% summary() # SR vs compliance
+
+rampdf$IBA[rampdf$KT == 'T'] %>% describe() # summary stats for IB in CTRL
+rampdf$IBA[rampdf$KT == 'C'] %>% describe() # summary stats for IB w SEE
 
 # Ramps regressions
-describe(rampdf[c('rLmt', 'rLf', 'rFmt', 'rvmt', 'rvf')])
+describe(rampdf[c('rLmt', 'rLf', 'rFmt', 'rvmt', 'rvf')]) # summary stats for regression R2s
+
 # compare regression slopes
-rampdf %>% lmerTest::lmer(formula = mLf ~ KT + (1|unID)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = mLmt ~ KT + (1|unID)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = mvf ~ KT + (1|unID)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = mvmt ~ KT + (1|unID)) %>% summary()
-rampdf %>% lmerTest::lmer(formula = mFmt ~ KT + (1|unID)) %>% summary()
-rampdf$mFmt[rampdf$KT == 'T'] %>% describe() 
-rampdf$mFmt[rampdf$KT == 'C'] %>% describe() 
-rampdf$rFmt[rampdf$KT == 'T'] %>% describe() 
-rampdf$rFmt[rampdf$KT == 'C'] %>% describe() 
+rampdf %>% lmerTest::lmer(formula = mLf ~ KT + (1|unID)) %>% summary() # IFR/Lf vs compliance
+rampdf %>% lmerTest::lmer(formula = mLmt ~ KT + (1|unID)) %>% summary() # IFR/Lmt vs compliance
+rampdf %>% lmerTest::lmer(formula = mvf ~ KT + (1|unID)) %>% summary() # IFR/vf vs compliance
+rampdf %>% lmerTest::lmer(formula = mvmt ~ KT + (1|unID)) %>% summary() # IFR/vmt vs compliance
+rampdf %>% lmerTest::lmer(formula = mFmt ~ KT + (1|unID)) %>% summary() # IFR/Fmt vs compliance
+
+rampdf$mFmt[rampdf$KT == 'T'] %>% describe() # IFR/Fmt in CTRL
+rampdf$mFmt[rampdf$KT == 'C'] %>% describe() # IFR/Fmt w SEE
+rampdf$rFmt[rampdf$KT == 'T'] %>% describe() # IFR/Fmt R2 in CTRL
+rampdf$rFmt[rampdf$KT == 'C'] %>% describe()# IFR/Fmt R2 w SEE
 
 # Ramps IFR comparison plots
 rampIBplot <- rampdf %>% ggplot(aes(x = KT, y = IBA)) +
@@ -176,19 +191,25 @@ rampDRplot <- rampdf %>% ggplot(aes(x = KT, y = DRA)) +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 400)) +
+  ylim(c(0, 350)) +
+  theme_bw()
+rampSRplot <- rampdf %>% ggplot(aes(x = KT, y = SRA)) +
+  geom_violin() +
+  geom_jitter(width = .1, height = 0) +
+  geom_smooth(aes(group = unID), method = 'lm', se = F) +
+  stat_summary(fun = mean, geom = 'crossbar') +
+  ylim(c(0, 200)) +
   theme_bw()
 rampDIplot <- rampdf %>% ggplot(aes(x = KT, y = DI)) +
   geom_violin() +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 300)) +
+  ylim(c(0, 250)) +
   theme_bw()
-ggarrange(rampIBplot, rampDRplot, rampDIplot, nrow = 3, legend = F)
-ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig3stats.eps', device = 'eps', plot = last_plot(),
-       width = 2, height = 6, units = 'in')
-ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig3stats.jpg', device = 'jpg', plot = last_plot())
+ggarrange(rampIBplot, rampDRplot, rampSRplot, rampDIplot, nrow = 2,ncol = 2, legend = F)
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig3stats.eps', device = 'eps', plot = last_plot(), width = 4, height = 5, units = 'in')
+ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig3stats.jpg', device = 'jpg', plot = last_plot(), width = 4, height = 5, units = 'in')
 ```
 # Triangles analysis
 ```{r}
@@ -259,7 +280,7 @@ trimifrHDplot <- tridf %>% ggplot(aes(x = KT, y = mifrHD)) +
   geom_jitter(width = .1, height = 0) +
   geom_smooth(aes(group = unID), method = 'lm', se = F) +
   stat_summary(fun = mean, geom = 'crossbar') +
-  ylim(c(0, 50)) +
+  ylim(c(0, 25)) +
   theme_bw()
 ggarrange(trimifr1plot, trimifr2plot, triIBplot, trisc1plot, trisc2plot, {}, triscHDplot,  trimifrHDplot, nrow = 3, ncol = 3, legend = F)
 ggsave('/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript/fig4stats.eps', device = 'eps', plot = last_plot(),

@@ -1,35 +1,32 @@
-%  fig 4
+%  fig 2
 clc
 clear
 close all
 addpath(genpath('Functions'))
-load('summaryTable.mat')
 
+% Load data files
+source = '/Volumes/labs/ting/shared_ting/Jake/Spindle spring data';
+path = uigetdir(source);
+savedir = '/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript';
+
+D = dir(path);
+D = D(3:end);
 %% find ctrl data
-animals = unique(summaryTable.animal);
-an = animals{13};
+close all
 F = figure();
-Tcount = 0;
-for ii = 1:height(summaryTable)
-    check1 = summaryTable.badtrial{ii} == 0;
-    check2 = summaryTable.trimdatacheck{ii} == 1;
-    check3 = strcmp(summaryTable.aff{ii}, 'IA');
-    check4 = strcmp(summaryTable.KT{ii}, 'T');
-    check5 = strcmp(summaryTable.animal{ii}, an);
-    
-    if check1 && check2 && check3 && check4 && check5
-        Tcount = Tcount + 1;
-    end
-    
-    if check1 && check2 && check3 && check4 && check5 && Tcount == 3
-        data = load(summaryTable.address{ii});
-        time = data.trimdata.time;
-        st = data.trimdata.spiketimes;
-        ifr = data.trimdata.ifr;
-        Lmt = data.trimdata.Lmt;
-        Lf = data.trimdata.Lf;
-        vf = data.trimdata.vf;
-        Fmt = data.trimdata.Fmt;
+for ii = 427%1:length(D)
+    data = load([path filesep D(ii).name]);
+    if strcmp(data.parameters.KT, 'T') && ...
+            strcmp(data.parameters.type, 'sine') && ...
+            strcmp(data.parameters.ID, 'A18042-20-32')
+%         disp(ii)
+        time = data.procdata.time;
+        st = data.procdata.spiketimes;
+        ifr = data.procdata.ifr;
+        Lmt = data.procdata.Lmt;
+        Lf = data.procdata.Lf;
+        vf = data.procdata.vf;
+        Fmt = data.procdata.Fmt;
         
         % create color maps
         cStart = [0 0 0];
@@ -42,6 +39,7 @@ for ii = 1:height(summaryTable)
         subplot(421)
         hold on
         plot(time, Lmt, 'Color', cStart)
+        xlim([-.25 2.25])
         ax = gca;
         subplot(423)
         hold on
@@ -63,49 +61,40 @@ for ii = 1:height(summaryTable)
         subplot(422)
         hold on
         scatter(Lmt_st, ifr, 8*sz2, map2, 'filled')
-        plot(Lmt_st, Lmt_st*data.models.mLmt, '--k')
+%         plot(Lmt_st, Lmt_st*data.models.mLmt, '--k')
         xlabel('Lmt')
         subplot(424)
         hold on
         scatter(Lf_st, ifr, 8*sz2, map2, 'filled')
-        plot(Lf_st, Lf_st*data.models.mLf, '--k')
+%         plot(Lf_st, Lf_st*data.models.mLf, '--k')
         xlabel('Lf')
         subplot(426)
         hold on
         scatter(vf_st, ifr, 8*sz2, map2, 'filled')
-        plot(vf_st, vf_st*data.models.mvf, '--k')
+%         plot(vf_st, vf_st*data.models.mvf, '--k')
         xlabel('vf')
         subplot(428)
         hold on
         scatter(Fmt_st, ifr, 8*sz2, map2, 'filled')
-        plot(Fmt_st, Fmt_st*data.models.mFmt, '--k')
+%         plot(Fmt_st, Fmt_st*data.models.mFmt, '--k')
         xlabel('Fmt')
     end
 end
-%%
-Ccount = 0;
-for jj = 1:height(summaryTable)
-    check1 = summaryTable.badtrial{jj} == 0;
-    check2 = summaryTable.trimdatacheck{jj} == 1;
-    check3 = strcmp(summaryTable.aff{jj}, 'IA');
-    check4 = strcmp(summaryTable.KT{jj}, 'C');
-    check5 = strcmp(summaryTable.animal{jj}, an);
-    
-    if check1 && check2 && check3 && check4 && check5
-        Ccount = Ccount + 1;
-%         Ccount
-    end
-    
-    if check1 && check2 && check3 && check4 && check5 && Ccount == 2
-        data = load(summaryTable.address{jj});
-        time = data.trimdata.time;
-        st = data.trimdata.spiketimes;
-        ifr = data.trimdata.ifr;
-        Lmt = data.trimdata.Lmt;
-        vmt = data.trimdata.vmt;
-        Lf = data.trimdata.Lf;
-        vf = data.trimdata.vf;
-        Fmt = data.trimdata.Fmt;
+
+for jj = 400%1:length(D)
+    data = load([path filesep D(jj).name]);
+    if strcmp(data.parameters.KT, 'C') && ...
+            strcmp(data.parameters.type, 'sine') && ...
+            strcmp(data.parameters.ID, 'A18042-20-32')
+%         disp(jj)
+        time = data.procdata.time;
+        st = data.procdata.spiketimes;
+        ifr = data.procdata.ifr;
+        Lmt = data.procdata.Lmt;
+        vmt = data.procdata.vmt;
+        Lf = data.procdata.Lf;
+        vf = data.procdata.vf;
+        Fmt = data.procdata.Fmt;
         
         % create color maps
         cStart = [0 109 44]/255;
@@ -118,8 +107,7 @@ for jj = 1:height(summaryTable)
         subplot(421)
         hold on
         plot(time, Lmt, 'Color', cStart)
-        xlim([0.5 2.5])
-        ax = gca;
+        xlim(ax.XAxis.Limits)
         subplot(423)
         hold on
         plot(time, Lf, 'Color', cStart)
@@ -143,28 +131,27 @@ for jj = 1:height(summaryTable)
         subplot(422)
         hold on
         scatter(Lmt_st, ifr, 8*sz2, map2, 'filled')
-        plot(Lmt_st, Lmt_st*data.models.mLmt, 'Color', cStart)
+%         plot(Lmt_st, Lmt_st*data.models.mLmt, 'Color', cStart)
         xlim([-1 2.5])
         subplot(424)
         hold on
         scatter(Lf_st, ifr, 8*sz2, map2, 'filled')
-        plot(Lf_st, Lf_st*data.models.mLf, 'Color', cStart)
+%         plot(Lf_st, Lf_st*data.models.mLf, 'Color', cStart)
         xlim([-.5 1.5])
         subplot(426)
         hold on
         scatter(vf_st, ifr, 8*sz2, map2, 'filled')
-        plot(vf_st, vf_st*data.models.mvf, 'Color', cStart)
+%         plot(vf_st, vf_st*data.models.mvf, 'Color', cStart)
         xlabel('vf')
         xlim([-7.5 15])
         subplot(428)
         hold on
         scatter(Fmt_st, ifr, 8*sz2, map2, 'filled')
-        plot(Fmt_st, Fmt_st*data.models.mFmt(1), 'Color', cStart)
+%         plot(Fmt_st, Fmt_st*data.models.mFmt(1), 'Color', cStart)
         xlabel('Fmt')
         xlim([.15 .75])
-        
     end
 end
 %%
-saveas(F, 'C:\\Users\Jake\Documents\Lab\JEPfig2.jpg')
-print(['C:\\Users\Jake\Documents\Lab\JEPfig2data.eps'], '-depsc','-painters')
+saveas(F, [savedir filesep 'JEPfig2.jpg'])
+print([savedir filesep 'fig2timeseries.eps'], '-depsc','-painters')

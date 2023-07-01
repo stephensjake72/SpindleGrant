@@ -2,27 +2,23 @@
 clc
 clear
 close all
-load('summaryTable.mat')
 addpath(genpath('Functions'))
 
+% Load data files
+source = '/Volumes/labs/ting/shared_ting/Jake/Spindle spring data';
+path = uigetdir(source);
+savedir = '/Users/jacobstephens/Documents/Figures/Abbott_Stephens_manuscript';
+
+D = dir(path);
+D = D(3:end);
 %% find ctrl data
-animals = unique(summaryTable.animal);
 F = figure();
-Tcount = 0;
-for ii = 1:height(summaryTable)
-    check1 = summaryTable.badtrial{ii} == 0;
-    check2 = strcmp(summaryTable.type{ii}, 'ramp');
-    check3 = strcmp(summaryTable.aff{ii}, 'IA');
-    check4 = summaryTable.passive{ii} == 1;
-    check5 = strcmp(summaryTable.KT{ii}, 'T');
-    check6 = strcmp(summaryTable.animal{ii}, animals{13});
-    
-    if check1 && check2 && check3 && check4 && check5 && check6
-        Tcount = Tcount + 1;
-    end
-    
-    if check1 && check2 && check3 && check4 && check5 && check6 && Tcount == 5
-        data = load(summaryTable.address{ii});
+for ii = 430%1:length(D)
+    data = load([path filesep D(ii).name]);
+    if strcmp(data.parameters.KT, 'T') && ...
+            strcmp(data.parameters.type, 'ramp') && ...
+            strcmp(data.parameters.ID, 'A18042-20-32')
+        disp(ii)
         time = data.procdata.time;
         st = data.procdata.spiketimes;
         ifr = data.procdata.ifr;
@@ -41,7 +37,7 @@ for ii = 1:height(summaryTable)
         subplot(421)
         hold on
         scatter(time, Lmt, sz1, map1)
-        xlim([.5 2.5])
+        xlim([-.25 1.5])
         ylim([0 3])
         ax = gca;
         subplot(423)
@@ -58,35 +54,29 @@ for ii = 1:height(summaryTable)
         xlim(ax.XAxis.Limits)
         
         subplot(422)
+        hold on
         scatter(data.procdata.Lmt, data.procdata.Lf, sz1, map1)
         set(gca, 'Box', 'off')
         xlim([-.5 3.5])
         subplot(424)
+        hold on
         scatter(data.procdata.Lmt, data.procdata.Fmt, sz1, map1)
         set(gca, 'Box', 'off')
         xlim([-.5 3.5])
         subplot(426)
+        hold on
         scatter(data.procdata.Lf, data.procdata.Fmt, sz1, map1)
         set(gca, 'Box', 'off')
         xlim([-.25 1.5])
     end
 end
-%%
-Ccount = 0;
-for jj = 1:height(summaryTable)
-    check1 = summaryTable.badtrial{jj} == 0;
-    check2 = strcmp(summaryTable.type{jj}, 'ramp');
-    check3 = strcmp(summaryTable.aff{jj}, 'IA');
-    check4 = summaryTable.passive{jj} == 1;
-    check5 = strcmp(summaryTable.KT{jj}, 'C');
-    check6 = strcmp(summaryTable.animal{jj}, animals{13});
-    if check1 && check2 && check3 && check4 && check5 && check6
-        Ccount = Ccount + 1;
-%         Ccount
-    end
-    
-    if check1 && check2 && check3 && check4 && check5 && check6 && Ccount == 2
-        data = load(summaryTable.address{jj});
+
+for jj = 487%1:length(D)
+    data = load([path filesep D(jj).name]);
+    if strcmp(data.parameters.KT, 'C') && ...
+            strcmp(data.parameters.type, 'ramp') && ...
+            strcmp(data.parameters.ID, 'A18042-20-32')
+        disp(jj)
         time = data.procdata.time;
         st = data.procdata.spiketimes;
         ifr = data.procdata.ifr;
@@ -126,5 +116,5 @@ for jj = 1:height(summaryTable)
     end
 end
 %%
-saveas(F, 'C:\\Users\Jake\Documents\Lab\JEPfig1.jpg')
-print(['C:\\Users\Jake\Documents\Lab\fig1timeseries.eps'], '-depsc','-painters')
+saveas(F, [savedir filesep 'JEPfig1.jpg'])
+print([savedir filesep 'fig1timeseries.eps'], '-depsc','-painters')
