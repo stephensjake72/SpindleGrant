@@ -1,6 +1,6 @@
 % Script to process data
 % Author: JDS
-% Updated: 4/11/2023
+% Updated: 10/25/23
 clc
 clear
 close all
@@ -9,7 +9,7 @@ addpath(genpath('Functions'))
 % Load data files
 path = uigetdir();
 D = dir(path);
-savedir = '//cosmic.bme.emory.edu/labs/ting/shared_ting/Jake/SFN/procdata';
+savedir = [path(1:find(path == filesep, 2, 'last')) 'SFN' filesep 'procdata'];
 if ~exist(savedir, 'dir')
     mkdir(savedir)
 end
@@ -25,8 +25,8 @@ for ii = 1:numel(D)
     dsf = 20;
     % butterworth filter design
     fsample = 1/(dsf*(data.recdata.time(2)-data.recdata.time(1)));
-    fstop = 100; % 100 Hz cutoff
-    n = 2; % second order
+    fstop = 80; % 80Hz cutoff
+    n = 2; % fourth order
     Wn = 2*fstop/fsample;
     
     % time
@@ -43,7 +43,7 @@ for ii = 1:numel(D)
     
     % smooth and get first derivatives with savitsky-golay filter
     fOrder = 2;
-    Width = 21; % 21 samples/893 Hz = 57 ms
+    Width = 21; % 51 samples/893 Hz = 57 ms
     [Lmt, vmt, ~] = sgolaydiff(Lmt, fOrder, Width);
     [Fmt, ymt, ~] = sgolaydiff(Fmt, fOrder, Width);
     

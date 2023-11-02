@@ -32,6 +32,9 @@ options = optimoptions('fmincon', 'Display', 'off');
 [FYgains, ~] = fmincon(cost, init, [], [], [], [], lower, upper, nc_nlcon, options);
  
 % time series fitting data
+fit.time = data.time;
+fit.spiketimes = data.spiketimes;
+fit.ifr = data.ifr;
 fit.F = F;
 fit.Y = Y;
 fit.L = L;

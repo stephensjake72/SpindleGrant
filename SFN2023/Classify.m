@@ -6,7 +6,8 @@ close all
 addpath(genpath('Functions'))
 
 % Load data files
-path = uigetdir();
+source = '/Volumes/labs/ting/shared_ting/Jake/';
+path = uigetdir(source);
 D = dir(path);
 D = D(3:end);
 %%
