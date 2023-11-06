@@ -6,14 +6,14 @@ close all
 addpath(genpath('Functions'))
 
 % Load data files
-source = '/Volumes/labs/ting/shared_ting/Jake/';
-path = uigetdir(source);
+path = uigetdir();
 D = dir(path);
 D = D(3:end);
 %%
 for ii = 1:numel(D)
     disp(ii)
     data = load([D(ii).folder filesep D(ii).name]);
+    
     parameters = data.parameters;
     
     rampcheck = sum(abs(data.procdata.vmt) > 15) > 100;

@@ -25,8 +25,8 @@ for ii = 1:numel(D)
     dsf = 20;
     % butterworth filter design
     fsample = 1/(dsf*(data.recdata.time(2)-data.recdata.time(1)));
-    fstop = 80; % 80Hz cutoff
-    n = 2; % fourth order
+    fstop = 100; % 80Hz cutoff
+    n = 4; % 4th order
     Wn = 2*fstop/fsample;
     
     % time
