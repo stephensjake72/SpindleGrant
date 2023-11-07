@@ -1,50 +1,23 @@
-function MTcost = fy_cost(F, Y, L, V, time, spiketimes, ifr, gains)
-A = gains(1);
-k_exp = gains(2);
-L0 = gains(3);
-k_lin = gains(4);
-kF = gains(5);
-kY = gains(6);
-bF = gains(7);
-bY = gains(8);
-lambda = gains(9);
+function MTcost = fy_cost(F, Y, time, spiketimes, ifr, gains)
+kF = gains(1);
+kY = gains(2);
+bF = gains(3);
+lambda = gains(4);
 
 % interpolate to spiketimes
 type = 'linear';
 F_st = interp1((time + lambda), F, spiketimes, type);
 Y_st = interp1((time + lambda), Y, spiketimes, type);
-L_st = interp1((time + lambda), L, spiketimes, type);
-V_st = interp1((time + lambda), V, spiketimes, type);
- 
-% contractile force and yank
-Fc = F_st - A*exp(k_exp*(L_st - L0)) - k_lin*(L_st - L0);
-Yc = Y_st - A*k_exp*V_st.*exp(k_exp*(L_st - L0)) - k_lin*V_st;
  
 % currents
-rChain = kF*(Fc + bF); % scale
-rBag = kY*(Yc + bY);
+rChain = kF*(F_st + bF); % scale
+rBag = kY*Y_st;
 rChain(rChain < 0) = 0; % rectify
 rBag(rBag < 0) = 0;
-% rT = rChain + rBag; % sum
- 
-% occlusion
-% occChain = 1 + (rChain - rBag).*rT/5e5;
-% occChain(occChain > 1) = 1;
-% occBag = 1 + (rBag - rChain).*rT/5e5;
-% occBag(occBag > 1) = 1;
-% occChain = ones(1, numel(rChain));
-% occBag = ones(1, numel(rChain));
- 
-% components
-chainComp = rChain; %rChain.*occChain;
-bagComp = rBag; %rBag.*occBag;
  
 % cost
-predictor = chainComp + bagComp;
-residuals = (ifr- predictor).^2;
-iberror = residuals(spiketimes < .1);
-stretcherror = residuals(spiketimes >= 0.1 & spiketimes < .15);
-staticerror = residuals(spiketimes >= .15);
+predictor = rChain + rBag;
+sqRes = (ifr - predictor).^2;
  
 % weight = IFR;
-MTcost = sum(iberror) + sum(stretcherror) + sum(staticerror);
+MTcost = sum(sqRes);
