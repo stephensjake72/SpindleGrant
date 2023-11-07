@@ -1,7 +1,9 @@
 function plotModel(fit)
 
 fittextstr = {['kF = ' num2str(fit.kF)]; 
-    ['kY = ' num2str(fit.kY)]};
+    ['kY = ' num2str(fit.kY)];
+    ['bF = ' num2str(fit.bF)];
+    ['bY = ' num2str(fit.bY)]};
 
 
 figure
