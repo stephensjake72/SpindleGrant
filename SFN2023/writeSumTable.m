@@ -2,10 +2,10 @@ clc
 clear
 close all
 addpath(genpath('Functions'))
- 
-source = uigetdir();
-savedir = '/Volumes/labs/ting/shared_ting/Jake/A100401/';
- 
+
+source = uigetdir('/Volumes/labs/ting/shared_ting/Jake/SFN');
+savedir = '/Volumes/labs/ting/shared_ting/Jake/SFN';
+
 D = dir(source);
 D = D(3:end);
 %%
@@ -60,4 +60,4 @@ for pp = 1:numel(D)
     end
 end
  
-writetable(sumTable, [savedir filesep 'summaryNY' char(datetime('today')) '.csv'])
+writetable(sumTable, [savedir filesep 'summary' char(datetime('today')) '.csv'])

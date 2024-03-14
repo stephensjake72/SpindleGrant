@@ -1,11 +1,11 @@
 clc
 clear
 close all
- 
+
 addpath(genpath('Functions'))
-source = uigetdir('/Volumes/labs/ting/shared_ting/Jake/SFN/');
+source = '/Volumes/labs/ting/shared_ting/Jake/SFN/Fits-100mN-alteredinterp-07-Nov-2023';
  
-savedir = uigetdir();
+savedir = '/Users/jacobstephens/Library/CloudStorage/OneDrive-GeorgiaInstituteofTechnology/Research/Posters/SFN23/Figures';
  
 D = dir(source);
 D = D(3:end);
@@ -75,4 +75,4 @@ ylim([0 600])
 saveas(F1, [savedir filesep 'ModelForces.eps'], 'epsc')
 saveas(F1, [savedir filesep 'ModelForces.jpg'], 'jpeg')
 saveas(F2, [savedir filesep 'ModelFits.eps'], 'epsc')
-saveas(F1, [savedir filesep 'ModelFits.jpg'], 'jpeg')
+saveas(F2, [savedir filesep 'ModelFits.jpg'], 'jpeg')

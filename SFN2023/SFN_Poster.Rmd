@@ -1,0 +1,61 @@
+---
+title: "SFN_Poster"
+output: pdf_document
+date: "2023-04-14"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggpubr)
+library(lmerTest)
+library(ggbeeswarm)
+data = read.csv('/Volumes/labs/ting/shared_ting/Jake/SFN/summary08-Nov-2023.csv')
+```
+
+## Compare kF, kY and VAF
+```{r}
+kFModel <- data %>% lmerTest::lmer(formula = kF ~ aff + (1|ID))
+summary(kFModel)
+kYModel <- data %>% lmerTest::lmer(formula = kY ~ aff + (1|ID))
+summary(kYModel)
+bFModel <- data %>% lmerTest::lmer(formula = bF ~ aff + (1|ID))
+summary(bFModel)
+bYModel <- data %>% lmerTest::lmer(formula = bY ~ aff + (1|ID))
+summary(bYModel)
+
+x1 = data$R2[data$aff == 'IA']
+y1 = data$R2[data$aff == 'II']
+R2Model <- t.test(x1, y1, paired = F)
+R2Model
+```
+# Plot
+```{r}
+kFplot <- data %>% ggplot(aes(aff, kF)) + 
+  geom_boxplot(width = .5) +
+  geom_beeswarm() +
+  theme_bw() +
+  ylim(c(0, 1000))
+kYplot <- data %>% ggplot(aes(aff, kY)) + 
+  geom_boxplot(width = .5) +
+  geom_beeswarm() +
+  theme_bw() +
+  ylim(c(0, 100))
+bFplot <- data %>% ggplot(aes(aff, bF)) + 
+  geom_boxplot(width = .5) +
+  geom_beeswarm() +
+  theme_bw() +
+  ylim(c(-.3, .025))
+bYplot <- data %>% ggplot(aes(aff, bY)) + 
+  geom_boxplot(width = .5) +
+  geom_beeswarm() +
+  theme_bw() +
+  ylim(c(-3, .25))
+R2plot <- data %>% ggplot(aes(aff, R2)) + 
+  geom_boxplot(width = .5) +
+  geom_beeswarm() +
+  theme_bw() + 
+  ylim(c(0, 1))
+
+ggarrange(kFplot, kYplot, bFplot, bYplot, R2plot, nrow = 1, ncol = 6, common.legend = T, legend = 'bottom')
+ggsave('~/Documents/SFNFitResults.eps', device = 'eps', dpi =300, width = 8, height = 2, units = 'in')
+```

@@ -24,27 +24,22 @@ for ii = 1:numel(D) %numel(D)
     
     data = load([path filesep D(ii).name]);
     
-    parameters = data.parameters;
     procdata = data.procdata;
     NC = data.NC;
     
     %        kF,   kY,   bF, bY, lambda
-    init =  [200,  300,   1, -1];
-    upper = [500,  300,   1,  0];
-    lower = [0,      0, -.3, -5];
+    init =  [200,  300,   0, -1];
+    upper = [800,  300,   0,  0];
+    lower = [0,      0, -.3, -3];
     param = [init; lower; upper];
     
     fit = getFYgains(procdata, NC, param);
     
-    if mod(ii, 5) == 0
-        plotModel(fit)
-    end
-    
-    % subplot(1, 4, [floor(ii/60) + 1])
-    % hold on
-    % plot(fit.time + fit.lambda, fit.predictor + 20*ii, 'r')
-    % plot(fit.spiketimes, fit.ifr + 10*ii, '.k')
-    % xlim([0 2])
-    % hold off
-    save([savedir filesep D(ii).name], 'fit')
+    % if mod(ii, 5) == 0
+    %     plotModel(fit)
+    % end
+    parameters = data.parameters;
+    save([savedir filesep D(ii).name], 'fit', 'parameters')
 end
+
+% run("writeSumTable.m")

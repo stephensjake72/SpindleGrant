@@ -113,6 +113,7 @@ ylim([-50 350])
 subplot(515)
 plot(data.procdata.time, data.procdata.Lmt)
 xlim([-.5 2])
-
-saveas(F1, [savedir filesep 'Raster.eps'], 'epsc')
+%%
+F1
+print([savedir filesep 'Raster.eps'], '-depsc', '-painters')
 saveas(F1, [savedir filesep 'Raster.jpg'], 'jpeg')
