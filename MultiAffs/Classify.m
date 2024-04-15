@@ -18,10 +18,11 @@ for ii = 1:numel(D)
     parameters = data.parameters;
 
     amp = max(data.procdata.Lmt) - min(data.procdata.Lmt);
+    maxt = max(data.procdata.time);
 
-    rampcheck = max(data.procdata.time) < 3 && amp >= 2.8 && amp < 3.2;
-    tricheck = max(data.procdata.time) > 4.5 && amp >= 2.8 && amp < 3.2;
-    sinecheck = amp > 1.9 && amp < 2.1;
+    rampcheck = amp >= 2.8 && amp < 3.4 && maxt < 3 && maxt > 1.5;
+    tricheck = amp >= 2.8 && amp < 3.4 && max(data.procdata.time) < 8;
+    sinecheck = amp > 3.9 && amp < 4.2;
     if rampcheck
         subplot(411)
         parameters.type = 'ramp';
@@ -37,35 +38,5 @@ for ii = 1:numel(D)
     end
     hold on
     plot(data.procdata.time, data.procdata.Lmt)
-    % rampcheck = sum(abs(data.procdata.vmt) > 15) > 100 & max(data.procdata.time) < 3;
-    % tricheck = sum(abs(data.procdata.vmt) > 12) < 25 & max(data.procdata.time) < 8 & max(data.procdata.vmt) < 10;
-    % othercheck = max(data.procdata.time) > 20;
-    % if rampcheck
-    %     subplot(141)
-    %     hold on
-    %     plot(data.procdata.time, data.procdata.vmt)
-    % 
-    %     parameters.type = 'ramp';
-    % elseif tricheck
-    %     subplot(142)
-    %     hold on
-    %     plot(data.procdata.time, data.procdata.vmt)
-    % 
-    %     parameters.type = 'triangle';
-    % elseif othercheck
-    %     subplot(144)
-    %     hold on
-    %     plot(data.procdata.time, data.procdata.vmt)
-    % 
-    %     parameters.type = 'other';
-    % else
-    %     subplot(143)
-    %     hold on
-    %     plot(data.procdata.time, data.procdata.vmt)
-    % 
-    %     parameters.type = 'sine';
-    % end
-    % hold off
-    % 
-    save([D(ii).folder filesep D(ii).name], 'parameters', '-append')
+    % save([D(ii).folder filesep D(ii).name], 'parameters', '-append')
 end

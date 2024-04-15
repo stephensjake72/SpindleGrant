@@ -16,35 +16,35 @@ if ~exist(savepath, 'dir')
 end
 
 
-% %%
-% close all
-% for ii = 1:numel(D)
-%     if ~contains(D(ii).name, 'workloop')
-%         continue
-%     end
-    % data = load([D(ii).folder filesep D(ii).name]);
-    % 
-    % x1 = data.procdata.Lf;
-    % x1 = x1/(max(x1) - min(x1));
-    % y1 = data.procdata.Fmt;
-    % y1 = y1/(max(y1) - min(y1));
-    % x2 = interp1(data.procdata.time, x1, data.procdata.spiketimes);
-    % y2 = data.procdata.ifr;
-    % y3 = interp1(data.procdata.time, y1, data.procdata.spiketimes);
-    % 
-    % figure
-    % hold on
-    % subplot(311)
-    % plot(data.procdata.time, x1)
-    % ax = gca;
-    % subplot(312)
-    % plot(data.procdata.spiketimes, data.procdata.ifr, '.k')
-    % xlim(ax.XAxis.Limits)
-    % subplot(313)
-    % plot(x1, y1, 'k')
-    % hold on
-    % plot(x2, y3, '.g')
-    % sgtitle([num2str(ii) data.parameters.aff])
+%%
+close all
+for ii = 1:numel(D)
+    if ~contains(D(ii).name, 'workloop')
+        continue
+    end
+    data = load([D(ii).folder filesep D(ii).name]);
+    
+    x1 = data.procdata.Lf;
+%     x1 = x1/(max(x1) - min(x1));
+    y1 = data.procdata.Fmt;
+%     y1 = y1/(max(y1) - min(y1));
+    x2 = interp1(data.procdata.time, x1, data.procdata.spiketimes);
+    y2 = data.procdata.ifr;
+    y3 = interp1(data.procdata.time, y1, data.procdata.spiketimes);
+    
+    figure
+    hold on
+    subplot(311)
+    plot(data.procdata.time, x1)
+    ax = gca;
+    subplot(312)
+    plot(data.procdata.spiketimes, data.procdata.ifr, '.k')
+    xlim(ax.XAxis.Limits)
+    subplot(313)
+    plot(x1, y1, 'k')
+    hold on
+    plot(x2, y3, '.g')
+    sgtitle([num2str(ii) data.parameters.aff])
 %     switch data.parameters.aff
 %         case 'IA'
 %             subplot(412)
@@ -59,7 +59,7 @@ end
 %             hold on
 %             plot(x2, y3, '.r')
 %     end
-% end
+end
 
 % IB's: 168, 167, 166 168 best
 % IA's: 131 130 129 128 55
@@ -629,8 +629,8 @@ close(v)
 
 close
 f = imshow(frame.cdata);
-print([savepath filesep 'AffLoopIA_IB_Lf'], '-depsc2')
-print([savepath filesep 'AffLoopIA_IB_Lf'], '-djpeg')
+print([savepath filesep 'AffLoopIB_Lmt'], '-depsc2')
+print([savepath filesep 'AffLoopIB_Lmt'], '-djpeg')
 %% IA/IB Fmt vs Lmt Video
 ibdata = load([D(184).folder filesep D(184).name]);
 iadata = load([D(145).folder filesep D(145).name]);
@@ -737,11 +737,6 @@ for it = 10:5:numel(ibdata.procdata.time)
     writeVideo(v, frame);
 end
 close(v)
-
-close
-f = imshow(frame.cdata);
-print([savepath filesep 'AffLoopIA_IB_Lmt'], '-depsc2')
-print([savepath filesep 'AffLoopIA_IB_Lmt'], '-djpeg')
 %% IA vs IB spike counts
 close all
 
@@ -795,6 +790,3 @@ ylim([0 20])
 legend({'IA', 'IB'})
 xlabel('time')
 ylabel('spike count')
-
-print([savepath filesep 'AffLoopIA_IB_SC'], '-depsc2')
-print([savepath filesep 'AffLoopIA_IB_SC'], '-djpeg')

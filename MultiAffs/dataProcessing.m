@@ -1,6 +1,6 @@
 % Script to process data
 % Author: JDS
-% Updated: 3/10/24
+% Updated: 3/19/24
 clc
 clear
 close all
@@ -17,79 +17,68 @@ end
 D = D(3:end);
 %%
 % loop through experiment files
-for ii = 1:10%numel(D)
+for ii = 1:numel(D)
     disp(ii)
     data = load([D(ii).folder filesep D(ii).name]);
     
     % downsampling factor
     dsf = 20;
+    
     % butterworth filter design
     fsample = 1/(dsf*(data.recdata.time(2)-data.recdata.time(1)));
-    fstop = 100; % 80Hz cutoff
+    fstop = 200; % 200Hz cutoff
     n = 4; % 4th order
     Wn = 2*fstop/fsample;
-    
-    % time
-    time = data.recdata.time(1:dsf:end);
-    
-    % MTU length
-    Lmt = data.recdata.Lmt(1:dsf:end) - data.recdata.Lmt(1);
     [b, a] = butter(n, Wn, 'low');
-    Lmt = filtfilt(b, a, Lmt);
-    
-    % MTU force
-    Fmt = data.recdata.Fmt(1:dsf:end);
-    Fmt = filtfilt(b, a, Fmt);
-    
-    % smooth and get first derivatives with savitsky-golay filter
+
+    % SG parameters
     fOrder = 2;
-    Width = 21; % 51 samples/893 Hz = 57 ms
-    [Lmt, vmt, ~] = sgolaydiff(Lmt, fOrder, Width);
-    [Fmt, ymt, ~] = sgolaydiff(Fmt, fOrder, Width);
+    Width = 21; % 21 samples/893 Hz = 23.5 ms
+
+    ref = data.recdata.time;
+    channels = fieldnames(data.recdata);
+    for jj = 1:numel(channels)
+
+        vec = data.recdata.(channels{jj});
+
+        keep = ones(size(vec));
+        derivcheck = 0;
+        % check if a time series vector
+        if length(data.recdata.(channels{jj})) == length(ref)
+
+            % downsample
+            vec = vec(1:dsf:end);
+
+            if ~strcmp(channels{jj}, 'time')
+                derivcheck = 1;
+
+                % lowpass
+                vec = filtfilt(b, a, vec);
     
-    % smooth and get second derivatives
-    [vmt, amt, ~] = sgolaydiff(vmt, fOrder, Width);
-%     [ymt, ~, ~] = sgolaydiff(yank, fOrder, Width);
-    
-    % create logical vector to keep real values and exclude nans created by
-    % smoothing
-    keep = ~isnan(amt);
-    
-    Lmt = Lmt(keep);
-    Fmt = Fmt(keep);
-    vmt = vmt(keep)*fsample;
-    ymt = ymt(keep)*fsample;
-    amt = amt(keep);
-    time = time(keep);
-    
-    Lmt = Lmt - min(Lmt);
-    % set stretch start as time 0
-    Lthr = 0.5;
-    startind = find(Lmt > Lthr, 1, 'first');
-    if isempty(startind)
-        continue
+                % smooth and differentiate with SV filter
+                [~, vec2, vec3] = sgolaydiff(vec, fOrder, Width);
+
+            end
+
+            % get rid of nans
+            keep = zeros(size(vec));
+            keep(ceil(Width/2):length(vec) - ceil(Width/2)) = 1;
+            
+        end
+        keep = logical(keep);
+        procdata.(channels{jj}) = vec(keep);
+
+        % optionally export derivatives
+        if derivcheck
+            procdata.(['d' channels{jj}]) = vec2(keep); % first deriv
+            procdata.(['dd' channels{jj}]) = vec3(keep); % second deriv
+        end
     end
-    startTime = time(startind(end)) - 0.1;
-    disp(startTime)
-    time = time - startTime;
-    spiketimes = data.recdata.spiketimes - startTime;
-    
-    keep = time > -0.5;
-    % package in a structure and save
+
+    % figure
+    % plotProcData(procdata, ' ')
+
+    procdata.Lmt = procdata.Lmt - procdata.Lmt(1);
     parameters = data.parameters;
-    procdata.Lmt = Lmt(keep);
-    procdata.vmt = vmt(keep);
-    procdata.amt = amt(keep);
-    procdata.Fmt = Fmt(keep);
-    procdata.ymt = ymt(keep);
-    procdata.time = time(keep);
-    
-    spikewin = spiketimes > min(procdata.time) & spiketimes < max(procdata.time);
-    procdata.spiketimes = spiketimes(spikewin);
-    procdata.ifr = data.recdata.ifr(spikewin);
-    
-%     hold on
-%     plot(procdata.time, procdata.Lmt)
-    
     save([savedir filesep D(ii).name(1:end-4)], 'procdata', 'parameters')
 end
