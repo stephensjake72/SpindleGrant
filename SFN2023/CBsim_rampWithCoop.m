@@ -10,7 +10,7 @@ parms.simNo=[4]; % for file name, to not overwrite files
 
 % on your computer replace this part of the file path (fp_CurrSimOUT) from below
 % with the path to the github repo on your computer
-parms.fnp = '/Users/jacobstephens/Documents/GitHub/Simha-Ting2023JExptPhysiol/';
+parms.fnp = '/Users/jacobstephens/Documents/GitHub/SpindleGrant/SFN2023/';
 parms.fp_MATMyoSim = '/Users/jacobstephens/Documents/GitHub/MATMyoSim/code/';
 
 % check if input folder exists, if not then make it

@@ -7,7 +7,7 @@ close all
 addpath(genpath('Functions'))
 
 % Load data files
-path = uigetdir();
+path = uigetdir('/Volumes/labs/ting/shared_ting/Jake/other/');
 D = dir(path);
 D = D(3:end);
 %%
@@ -19,7 +19,7 @@ end
 
 %%
 % loop through experiment files
-for ii = 1:numel(D)
+for ii = 190:numel(D) %1:numel(D)
     disp(ii)
     data = load([D(ii).folder filesep D(ii).name]);
     

@@ -3,10 +3,10 @@ function fit = getFYgains(data, NC, parameters)
 % compute NC force and yank
 expcomp = NC.A*exp(NC.kexp*(data.Lmt - NC.L0));
 Fnc = expcomp + NC.klin*(data.Lmt - NC.L0);
-Ync = NC.kexp*data.vmt.*expcomp + NC.klin*data.vmt;
+Ync = NC.kexp*data.dLmt.*expcomp + NC.klin*data.dLmt;
 
 Fc = data.Fmt - Fnc;
-Yc = data.ymt - Ync;
+Yc = data.dFmt - Ync;
 
 % constraints
 init = parameters(1, :);
@@ -21,11 +21,11 @@ ifr = data.ifr;
 % interpolate ifr to time to create a curve rather than discrete points
 % need to add "anchor points" at time t = -5, t = 0 and t = 2 to keep
 % extrapolation from going insane
-ifrint = interp1([min(time); 0; spiketimes; max(time)], [0; 0; ifr; 0], time, 'pchip', 'extrap');
-ifrint = ifrint';
+% ifrint = interp1([min(time); 0; spiketimes; max(time)], [0; 0; ifr; 0], time, 'pchip', 'extrap');
+% ifrint = ifrint';
 % ifrint = smooth
 % cost
-cost = @(gains) fy_cost(Fc, Yc, time, spiketimes, ifrint, gains);
+cost = @(gains) fy_cost(Fc, Yc, time, spiketimes, ifr, gains);
  
 % run optimization
 options = optimoptions('fmincon', 'Display', 'off');
@@ -38,7 +38,7 @@ fit.ifr = data.ifr;
 fit.Fc = Fc;
 fit.Yc = Yc;
 fit.Fmt = data.Fmt;
-fit.ymt = data.ymt;
+fit.dFmt = data.dFmt;
 fit.Lmt = data.Lmt;
 
 % coefficients
@@ -50,7 +50,7 @@ fit.kF = FYgains(1);
 fit.kY = FYgains(2);
 fit.bF = FYgains(3);
 fit.bY = FYgains(4);
-% fit.lambda = FYgains(4);
+fit.lambda = 0;
  
 % currents
 rF = fit.kF*(fit.Fc + fit.bF);

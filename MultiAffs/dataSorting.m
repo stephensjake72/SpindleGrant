@@ -13,20 +13,22 @@ addpath(genpath('Functions'))
 source = '/Volumes/labs/ting/shared_ting/Jake/';
 path = uigetdir(source);
 D = dir(path);
-savedir = [path(1:find(path == '/', 1, 'last')) 'recdata'];
+savedir = [path filesep 'recdata'];
 if ~exist(savedir, 'dir')
     mkdir(savedir)
 end
 
-D = D(3:end);
 %%
 close all
 for ii = 1:numel(D)
+    if ~contains(D(ii).name, '.mat')
+        continue
+    end
     disp(D(ii).name)
     data = load([D(ii).folder filesep D(ii).name]);
     
     % PARAMETER EXTRACTION
-    breaks = find(D(ii).name == '_');
+    breaks = find(D(ii).name == '-' | D(ii).name == '_');
     parameters.ID = D(ii).name(1:breaks(1)-1);
     parameters.cell = D(ii).name(breaks(2)+1:breaks(3)-1);
     parameters.aff = D(ii).name(breaks(3)+1:find(D(ii).name == '.')-1);
@@ -38,7 +40,7 @@ for ii = 1:numel(D)
     if isfield(data, 'sonos')
         Lf = data.sonos.values;
     end
-    spiketimes = data.Spikes1.times;
+    spiketimes = data.Spikes.times;
 
     ifr = spikes2ifr(spiketimes);
     time = data.motor_F.times;

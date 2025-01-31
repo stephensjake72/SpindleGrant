@@ -8,7 +8,7 @@ close all
 addpath(genpath('Functions'))
 
 % Load data files
-source = uigetdir();
+source = '/Volumes/labs/ting/shared_ting/Jake/other/MAT files';
 %%
 
 savedir = [source(1:find(source == filesep, 1, 'last')) 'recdata'];
@@ -17,11 +17,11 @@ if ~exist(savedir, 'dir')
     mkdir(savedir)
 end
 
-%%
+
 D = dir(source);
 D = D(3:end);
 %%
-for ii = 1:numel(D)
+for ii = 7
     disp(ii)
     data = load([D(ii).folder filesep D(ii).name]);
     

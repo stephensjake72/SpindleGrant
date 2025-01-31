@@ -1,0 +1,137 @@
+---
+title: "SICB_part1"
+output: html_document
+date: "2024-08-20"
+---
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggpubr)
+library(lmerTest)
+library(ggbeeswarm)
+library(ggsignif)
+```
+
+
+#Load data
+```{r}
+ramptab = read.csv('/Volumes/labs/ting/shared_ting/Jake/MultiAffs_mat/RampTable.csv')
+
+ramptab$StretchV <- round(ramptab$StretchV, 0)
+
+sinetab = read.csv('/Volumes/labs/ting/shared_ting/Jake/MultiAffs_mat/SineTable.csv')
+tritab = read.csv('/Volumes/labs/ting/shared_ting/Jake/MultiAffs_mat/TriTable.csv')
+```
+
+Part 1
+testing ramp velocity
+```{r}
+iaramp = ramptab[ramptab$AffType == 'IA', ]
+iiramp = ramptab[ramptab$AffType == 'II', ]
+
+iaibplot <- iaramp %>% ggplot(aes(x = StretchV, y = InB, color = CellID)) +
+  geom_point(aes(height = 0)) +
+  geom_smooth(se = F, method = lm)
+iadrplot <- iaramp %>% ggplot(aes(x = StretchV, y = DR, color = CellID)) +
+  geom_point(aes(height = 0)) +
+  geom_smooth(se = F, method = lm)
+iasrplot <- iaramp %>% ggplot(aes(x = StretchV, y = SR, color = CellID)) +
+  geom_point(aes(height = 0)) +
+  geom_smooth(se = F, method = lm)
+
+iidrplot <- iiramp %>% ggplot(aes(x = StretchV, y = DR, color = CellID)) +
+  geom_point(aes(height = 0)) +
+  geom_smooth(se = F, method = lm)
+iisrplot <- iiramp %>% ggplot(aes(x = StretchV, y = SR, color = CellID)) +
+  geom_point(aes(height = 0)) +
+  geom_smooth(se = F, method = lm)
+
+emptyplot <- ggplot()
+
+p1 <- ggarrange(nrow = 1, ncol = 3, iaibplot, iadrplot, iasrplot, common.legend = T)
+p2 <- ggarrange(nrow = 1, ncol = 3, emptyplot, iidrplot, iisrplot, common.legend = T)
+ggarrange(nrow = 2, p1, p2)
+
+ggsave('/Users/jacobstephens/Documents/SpindleSummit_10_24/spikestats.jpg')
+```
+
+Stats test of velocity relationships
+```{r}
+lmer(InB ~ StretchV + (1|CellID), iaramp) %>% summary()
+lmer(DR ~ StretchV + (1|CellID), iaramp) %>% summary()
+lmer(SR ~ StretchV + (1|CellID), iaramp) %>% summary()
+
+
+lmer(DR ~StretchV + (1|CellID), iiramp) %>% summary()
+lmer(SR ~StretchV + (1|CellID), iiramp) %>% summary()
+
+```
+
+
+Part 2
+Triangles
+```{r}
+iatri <- tritab[tritab$AffType == 'IA', ]
+iitri <- tritab[tritab$AffType == 'II', ]
+
+# make spike count plot
+iascdata <- iatri[ , c(1:5)] # subset to cell, aff, and spike count data
+
+# pivot the data so the stretch number is a column so we can plot it on the x axis
+iascplot <- iascdata %>% pivot_longer(cols = c('SC1', 'SC2', 'SC3'), names_to = 'stretchnum') %>%
+  ggplot(aes(x = stretchnum, y = value)) +
+  geom_boxplot() +
+  geom_point(aes(color = CellID)) +
+  xlab('stretch number') +
+  ylab('spike count')
+
+# repeat process with mean ifr
+iamifrdata <- iatri[ , c(1, 2, 6, 7, 8)]
+iamifrplot <- iamifrdata %>% pivot_longer(cols = c('M1', 'M2', 'M3'), names_to = 'stretchnum') %>%
+  ggplot(aes(x = stretchnum, y = value)) +
+  geom_boxplot() +
+  geom_point(aes(color = CellID)) +
+  geom_signif(method = anova)+
+  xlab('stretch number') +
+  ylab('mean IFR')
+
+# repeat with IIs
+iiscdata <- iitri[ , c(1:5)]
+iiscplot <- iiscdata %>% pivot_longer(cols = c('SC1', 'SC2', 'SC3'), names_to = 'stretchnum') %>%
+  ggplot(aes(x = stretchnum, y = value)) +
+  geom_boxplot() +
+  geom_point(aes(color = CellID)) +
+  xlab('stretch number') +
+  ylab('spike count')
+iimifrdata <- iitri[ , c(1, 2, 6, 7, 8)]
+iimifrplot <- iimifrdata %>% pivot_longer(cols = c('M1', 'M2', 'M3'), names_to = 'stretchnum') %>%
+  ggplot(aes(x = stretchnum, y = value)) +
+  geom_boxplot() +
+  geom_point(aes(color = CellID)) +
+  xlab('stretch number') +
+  ylab('mean IFR')
+
+iatriplot <- ggarrange(nrow = 1, ncol = 2, iascplot, iamifrplot, common.legend = T,
+                       legend = 'right')
+iitriplot <- ggarrange(nrow = 1, ncol = 2, iiscplot, iimifrplot, common.legend = T,
+                       legend = 'right')
+ggarrange(nrow = 2, iatriplot, iitriplot)
+```
+
+```{r}
+iascdatasub <- iascdata %>% pivot_longer(cols = c('SC1', 'SC2', 'SC3'), names_to = 'stretchnum') 
+group1a <- iascdatasub[iascdatasub$stretchnum != 'SC3', ]
+group2a <- iascdatasub[iascdatasub$stretchnum != 'SC1', ]
+group3a <- iascdatasub[iascdatasub$stretchnum != 'SC2', ]
+t.test(formula = value ~ stretchnum, data = group1a, paired = T)
+t.test(formula = value ~ stretchnum, data = group2a, paired = T)
+t.test(formula = value ~ stretchnum, data = group3a, paired = T)
+
+iiscdatasub <- iimifrdata %>% pivot_longer(cols = c('M1', 'M2', 'M3'), names_to = 'stretchnum') 
+group1b <- iiscdatasub[iiscdatasub$stretchnum != 'M3', ]
+group2b <- iiscdatasub[iiscdatasub$stretchnum != 'M1', ]
+group3b <- iiscdatasub[iiscdatasub$stretchnum != 'M2', ]
+t.test(formula = value ~ stretchnum, data = group1b, paired = T)
+t.test(formula = value ~ stretchnum, data = group2b, paired = T)
+t.test(formula = value ~ stretchnum, data = group3b, paired = T)
+
+```

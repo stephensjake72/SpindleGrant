@@ -7,12 +7,12 @@ close all
 addpath(genpath('Functions'))
 
 % Load data files
-path = uigetdir('/Volumes/labs/ting/shared_ting/Jake/');
+path = uigetdir('/Volumes/labs/ting/shared_ting/Jake/MultiAffs_mat');
 D = dir(path);
-savedir = [path(1:find(path == filesep, 1, 'last')) filesep 'procdata'];
-if ~exist(savedir, 'dir')
-    mkdir(savedir)
-end
+savedir = [path(1:find(path == filesep, 1, 'last')) 'procdata'];
+% if ~exist(savedir, 'dir')
+%     mkdir(savedir)
+% end
 
 D = D(3:end);
 %%
@@ -22,7 +22,7 @@ for ii = 1:numel(D)
     data = load([D(ii).folder filesep D(ii).name]);
     
     % downsampling factor
-    dsf = 20;
+    dsf = 10;
     
     % butterworth filter design
     fsample = 1/(dsf*(data.recdata.time(2)-data.recdata.time(1)));
@@ -33,7 +33,7 @@ for ii = 1:numel(D)
 
     % SG parameters
     fOrder = 2;
-    Width = 21; % 21 samples/893 Hz = 23.5 ms
+    Width = 51; % 51 samples/1700 Hz ~ 30 ms
 
     ref = data.recdata.time;
     channels = fieldnames(data.recdata);
@@ -58,6 +58,9 @@ for ii = 1:numel(D)
                 % smooth and differentiate with SV filter
                 [~, vec2, vec3] = sgolaydiff(vec, fOrder, Width);
 
+                % vec2
+                
+
             end
 
             % get rid of nans
@@ -70,15 +73,27 @@ for ii = 1:numel(D)
 
         % optionally export derivatives
         if derivcheck
-            procdata.(['d' channels{jj}]) = vec2(keep); % first deriv
-            procdata.(['dd' channels{jj}]) = vec3(keep); % second deriv
+            procdata.(['d' channels{jj}]) = fsample*vec2(keep); % first deriv
+            procdata.(['dd' channels{jj}]) = (fsample^2)*vec3(keep); % second deriv
         end
     end
-
-    % figure
-    % plotProcData(procdata, ' ')
-
+    % procdata.Lf = 15*procdata.Lf;
+    % procdata.dLf = 15*procdata.dLf;
+    % procdata.ddLf = 15*procdata.ddLf;
+    
     procdata.Lmt = procdata.Lmt - procdata.Lmt(1);
+
+    tstart = procdata.time(find(procdata.ddLmt > 150, 1, 'first'));
+    if isempty(tstart)
+        continue
+    end
+    procdata.time = procdata.time - tstart;
+    procdata.spiketimes = procdata.spiketimes - tstart;
+    if mod(ii, 5) == 0
+        figure
+        plotProcData(procdata, 'sonos')
+    end
+
     parameters = data.parameters;
     save([savedir filesep D(ii).name(1:end-4)], 'procdata', 'parameters')
 end
