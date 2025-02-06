@@ -45,3 +45,4 @@
 % data folder with individual files of processed data for each stretch.
 % This folder serves as the data source for the rest of the analysis.
 
+% The next script is Fig2.m which begins the analysis.
