@@ -1,10 +1,14 @@
+% this script is written for a different analysis but can be repurposed
+% it runs the fitting process to get the length and velocity gains (K
+% matrix) but doesn't do any decoding
+
 clc; clear; close all;
 
 addpath(genpath('Functions'))
 
 loc = '/Volumes/labs/ting/shared_ting/Jake/MultiAffs_mat/';
 d = dir(loc);
-%% get LV model gains
+%%
 close all
 
 opts = {d.name};
@@ -14,18 +18,14 @@ folders = opts(sel);
 for n = 1:length(folders)
     subdir = dir([loc folders{n} '/procdata']);
     for m = 1:length(subdir)
-        if contains(subdir(m).name, '.mat')
+        if contains(subdir(m).name, 'cell-1-') && contains(subdir(m).name, 'ramp')
             data = load([subdir(m).folder filesep subdir(m).name]);
-    
+
             % fit model coefficients
             parameters = [100 10; 0 0; 500 100];
             fit = getLVgains(data.procdata, parameters);
-    
-            hold on
-            plot(data.procdata.time, data.procdata.Lf)
-            % plotLVmodel(fit)
-            % 
-            % save([subdir(m).folder filesep subdir(m).name], 'fit', '-append')
+
+            plotLVmodel(fit)
         end
     end
 end

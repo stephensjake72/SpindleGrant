@@ -1,5 +1,5 @@
 function plotLVmodel(fit)
-figure
+figure('Position', [100 100 800 500])
 
 subplot(2, 4, [1 2])
 hold on

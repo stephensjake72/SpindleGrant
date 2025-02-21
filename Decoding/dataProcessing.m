@@ -1,9 +1,7 @@
 % Script to process data
 % Author: JDS
-% Updated: 3/19/24
-clc
-clear
-close all
+% Updated: 2.20.2025
+clc; clear; close all
 addpath(genpath('Functions'))
 
 % Load data files
@@ -16,6 +14,7 @@ savedir = [path(1:find(path == filesep, 1, 'last')) 'procdata'];
 
 D = D(3:end);
 %%
+close all
 % loop through experiment files
 for ii = 1:numel(D)
     disp(ii)
@@ -36,7 +35,7 @@ for ii = 1:numel(D)
 
     % SG parameters
     fOrder = 2;
-    Width = 51; % 51 samples/1700 Hz ~ 30 ms
+    Width = 75; % 51 samples/1700 Hz ~ 30 ms
 
     ref = data.recdata.time;
     channels = fieldnames(data.recdata);
@@ -70,26 +69,27 @@ for ii = 1:numel(D)
         keep = logical(keep);
         procdata.(channels{jj}) = vec(keep);
 
-        % optionally export derivatives
+        % export derivatives
         if derivcheck
             % multiply by sampling frequency to get the actual d/dt
             procdata.(['d' channels{jj}]) = fsample*vec2(keep); % first deriv
             procdata.(['dd' channels{jj}]) = (fsample^2)*vec3(keep); % second deriv
         end
     end
-    
-    procdata.Lmt = procdata.Lmt - procdata.Lmt(1);
 
-    tstart = procdata.time(find(procdata.ddLmt > 150, 1, 'first'));
+    tstart = procdata.time(find(procdata.ddLmt > 100, 1, 'first'));
     if isempty(tstart)
         continue
     end
     procdata.time = procdata.time - tstart;
     procdata.spiketimes = procdata.spiketimes - tstart;
+
+    procdata.Lmt = procdata.Lmt - procdata.Lmt(find(procdata.time < -.01, 1, 'last'));
+
     % if mod(ii, 5) == 0
         hold on
         % plotProcData(procdata, 'sonos')
-        plot(procdata.time, procdata.Lf)
+        plot(procdata.time, procdata.Lmt)
     % end
 
     parameters = data.parameters;

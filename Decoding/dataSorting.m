@@ -1,6 +1,6 @@
 % Data Sorting
 % Author: JDS
-% Updated: 3/15/2024
+% Updated: 2.20.2025
 % The purpose of this script is to go through the data exported from Spike2
 % and put them in the proper format for analysis.
 % The code is currently written for protocol A100142
@@ -10,7 +10,7 @@ close all
 addpath(genpath('Functions'))
 
 % Load data files
-source = '/Volumes/labs/ting/shared_ting/Jake/';
+source = '/Volumes/labs/ting/shared_ting/Jake/MultiAffs_mat';
 path = uigetdir(source);
 D = dir(path);
 savedir = [path filesep 'recdata'];
@@ -93,26 +93,31 @@ for ii = 1:numel(D)
         
         amp = max(recdata.Lmt) - min(recdata.Lmt);
         maxt = max(recdata.time);
-    
-        rampcheck = amp >= 2.8 && amp < 3.4 && maxt < 3 && maxt > 1.5;
-        tricheck = amp >= 2.8 && amp < 3.4 && max(recdata.time) < 8;
-        sinecheck = amp > 3.9 && amp < 4.2;
 
-        if savecheck == 1
-            if rampcheck
-                subplot(131)
-                type = 'ramp';
-            elseif tricheck
-                subplot(132)
-                type = 'triangle';
-            elseif sinecheck
-                subplot(133)
-                type = 'sine';
-            end
-            hold on
-            plot(recdata.time, recdata.Lf)
-            savename = [D(ii).name(1:end-4) '_' type '_' num2str(floor(startTimes(jj))) 's.mat'];
+        check1 = amp > 3 && amp < 3.2;
+        check2 = amp > 3.8 && amp < 4.3;
+        check3 = maxt > 2.5 && maxt < 3;
+        check4 = maxt > 5.8 && maxt < 6.2;
+        % check5 = 
+        skip = 0;
+        if check1 && check3 % ramp
+            subplot(411)
+            parameters.type = 'ramp';
+        elseif check1 && check4 % triangle
+            subplot(412)
+            parameters.type = 'triangle';
+        elseif check2 % sinusoid
+            subplot(413)
+            parameters.type = 'sine';
+        else
+            subplot(414)
+            skip = 1;
+        end
+        hold on
+        plot(recdata.time, recdata.Lmt - recdata.Lmt(1))
         
+        if skip == 0
+            savename = [D(ii).name(1:end-4) '_' parameters.type '_' num2str(floor(startTimes(jj))) 's.mat'];
             save([savedir filesep savename], 'parameters', 'recdata')
             disp(savename)
         end
