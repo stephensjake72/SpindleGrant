@@ -1,5 +1,9 @@
 function plotLVmodel(fit)
-figure('Position', [100 100 800 500])
+% figure('Position', [100 100 800 500])
+
+sgtitle({['k_L: ' num2str(fit.kL)]; ['k_v: ' num2str(fit.kV)]; ['b: ' num2str(fit.b)]})
+
+xscale = [-.25, max(fit.spiketimes)+.25];
 
 subplot(2, 4, [1 2])
 hold on
@@ -7,12 +11,13 @@ plot(fit.time, fit.Lcomp, 'Color', [.75 .75 .75])
 plot(fit.time, fit.Vcomp, 'Color', [.75 .75 .75])
 plot(fit.time, fit.predictor, 'Color', [252,141,89]/255)
 plot(fit.spiketimes, fit.ifr, '.k')
-xlim([-.25 1.4])
+xlim(xscale)
 
 subplot(2, 4, [5 6])
+hold on
 stem(fit.spiketimes, fit.resid, 'Marker', '.')
 yline(0, '--')
-xlim([-.25 1.4])
+xlim(xscale)
 
 p_st = interp1(fit.time, fit.predictor, fit.spiketimes);
 

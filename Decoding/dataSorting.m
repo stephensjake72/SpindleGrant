@@ -24,14 +24,14 @@ for ii = 1:numel(D)
     if ~contains(D(ii).name, '.mat')
         continue
     end
-    disp(D(ii).name)
+    % disp(D(ii).name)
     data = load([D(ii).folder filesep D(ii).name]);
     
     % PARAMETER EXTRACTION
     breaks = find(D(ii).name == '-' | D(ii).name == '_');
-    parameters.ID = D(ii).name(1:breaks(1)-1);
-    parameters.cell = D(ii).name(breaks(2)+1:breaks(3)-1);
-    parameters.aff = D(ii).name(breaks(3)+1:find(D(ii).name == '.')-1);
+    parameters.ID = D(ii).name(1:breaks(3)-1);
+    parameters.cell = D(ii).name(breaks(4)+1:breaks(5)-1);
+    parameters.aff = D(ii).name(breaks(5)+1:end-4);
     % parameters
 
     % NUMERICAL DATA EXTRACTION
@@ -40,11 +40,16 @@ for ii = 1:numel(D)
     if isfield(data, 'sonos')
         Lf = 15*data.sonos.values;
     end
-    spiketimes = data.Spikes.times;
-
+    if isfield(data, 'Spikes')
+        spiketimes = data.Spikes.times;
+    else
+        continue
+    end
     ifr = spikes2ifr(spiketimes);
     time = data.motor_F.times;
     
+    figure
+    plot(time, Lf)
      % find stretch periods
     [~, vmt, ~] = sgolaydiff(Lmt, 2, 501); % take the MTU velocity
     vmt = vmt/data.motor_L.interval; % divide by sampling rate
@@ -80,6 +85,9 @@ for ii = 1:numel(D)
         spikewin = spiketimes > startTimes(jj) & spiketimes < stopTimes(jj);
         recdata.spiketimes = spiketimes(spikewin) - startTimes(jj);
         recdata.ifr = ifr(spikewin);
+        win2 = recdata.spiketimes > recdata.time(1) & recdata.spiketimes < recdata.time(end);
+        recdata.spiketimes = recdata.spiketimes(win2);
+        recdata.ifr = recdata.ifr(win2);
 
         amp = max(recdata.Lmt) - min(recdata.Lmt);
         titlestr = '';
@@ -90,7 +98,7 @@ for ii = 1:numel(D)
         end
 
         parameters.startTime = startTimes(jj);
-        
+
         amp = max(recdata.Lmt) - min(recdata.Lmt);
         maxt = max(recdata.time);
 
@@ -100,29 +108,33 @@ for ii = 1:numel(D)
         check4 = maxt > 5.8 && maxt < 6.2;
         % check5 = 
         skip = 0;
-        if check1 && check3 % ramp
-            subplot(411)
-            parameters.type = 'ramp';
-        elseif check1 && check4 % triangle
-            subplot(412)
-            parameters.type = 'triangle';
-        elseif check2 % sinusoid
-            subplot(413)
-            parameters.type = 'sine';
-        else
-            subplot(414)
-            skip = 1;
-        end
-        hold on
-        plot(recdata.time, recdata.Lmt - recdata.Lmt(1))
-        
-        if skip == 0
-            savename = [D(ii).name(1:end-4) '_' parameters.type '_' num2str(floor(startTimes(jj))) 's.mat'];
-            save([savedir filesep savename], 'parameters', 'recdata')
-            disp(savename)
-        end
+        % if check1 && check3 % ramp
+        %     subplot(411)
+        %     parameters.type = 'ramp';
+        % elseif check1 && check4 % triangle
+        %     subplot(412)
+        %     parameters.type = 'triangle';
+        % elseif check2 % sinusoid
+        %     subplot(413)
+        %     parameters.type = 'sine';
+        % else
+        %     subplot(414)
+        %     skip = 1;
+        % end
+        % hold on
+        % plot(recdata.time, recdata.Lf - recdata.Lf(1))
+
+        % if skip == 0
+        %     savename = [D(ii).name(1:end-4) '_' parameters.type '_' num2str(floor(startTimes(jj))) 's.mat'];
+        %     % save([savedir filesep savename], 'parameters', 'recdata')
+        %     disp(savename)
+        % end
         clear index
     end
-    clear parameters recdata data
+    disp(D(ii).name)
+    parameters
+
+    % clear parameters recdata data
+    
     % close all
 end

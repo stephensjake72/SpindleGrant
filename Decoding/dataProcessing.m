@@ -28,14 +28,14 @@ for ii = 1:numel(D)
     
     % butterworth filter design
     fsample = 1/(dsf*(data.recdata.time(2)-data.recdata.time(1)));
-    fstop = 100; % 100 Hz cutoff
+    fstop = 200; % 100 Hz cutoff
     n = 4; % 4th order
     Wn = 2*fstop/fsample;
     [b, a] = butter(n, Wn, 'low');
 
     % SG parameters
     fOrder = 2;
-    Width = 75; % 51 samples/1700 Hz ~ 30 ms
+    Width = 51; % 51 samples/1700 Hz ~ 30 ms
 
     ref = data.recdata.time;
     channels = fieldnames(data.recdata);
@@ -84,14 +84,18 @@ for ii = 1:numel(D)
     procdata.time = procdata.time - tstart;
     procdata.spiketimes = procdata.spiketimes - tstart;
 
-    procdata.Lmt = procdata.Lmt - procdata.Lmt(find(procdata.time < -.01, 1, 'last'));
+    procdata.Lmt = procdata.Lmt - procdata.Lmt(find(procdata.time <= 0, 1, 'last'));
 
-    % if mod(ii, 5) == 0
-        hold on
-        % plotProcData(procdata, 'sonos')
-        plot(procdata.time, procdata.Lmt)
-    % end
+    if mod(ii, 5) == 0
+        figure
+        plotProcData(procdata, 'sonos')
+        % plot(procdata.time, procdata.Lmt)
+    end
 
     parameters = data.parameters;
     save([savedir filesep D(ii).name(1:end-4)], 'procdata', 'parameters')
 end
+
+%%
+run('appendStretchV.m')
+run('appendFreq.m')

@@ -1,17 +1,17 @@
-function plotModel(fit)
+function plotFYmodel(fit)
 
 fittextstr = {['kF = ' num2str(fit.kF)]; 
-    ['kY = ' num2str(fit.kY)];
-    ['bF = ' num2str(fit.bF)];
-    ['bY = ' num2str(fit.bY)]};
-
-
-figure
+    ['kdF = ' num2str(fit.kdF)];
+    ['L0 = ' num2str(fit.L0)]};
+% 
+% 
+% figure
 
 subplot(311)
-plot(fit.time, fit.Fcomp, 'b')
+plot(fit.time, fit.rF, 'b')
 hold on
-plot(fit.time, fit.Ycomp, 'Color', [0.8500 0.3250 0.0980])
+plot(fit.time, fit.rdF, 'Color', [0.8500 0.3250 0.0980])
+plot(fit.time, fit.b*ones(size(fit.time)), 'g')
 
 subplot(312)
 plot(fit.time, fit.predictor, 'r')

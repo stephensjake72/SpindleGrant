@@ -1,7 +1,7 @@
-function fit = getLVgains(data, parameters)
+function fit = getLVgainsMTU(data, parameters)
 
-L = data.Lf;
-V = data.dLf;
+L = data.Lmt;
+V = data.dLmt;
 
 % constraints
 init = parameters(1, :);
