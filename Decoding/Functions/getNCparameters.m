@@ -2,8 +2,8 @@ function NC = getNCparameters(data)
 
 % A kexp L0 kF
 init = [.011 1.42 0.26 100];
-lower = [.002 1.00 0.00 20];
-upper = [.050 1.75 0.50 400];
+lower = [.002 0.75 0.0 20];
+upper = [.060 1.75 0.50 400];
 
 cost = @(gains) nc_cost(data, gains);
 

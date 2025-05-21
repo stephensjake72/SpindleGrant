@@ -2,7 +2,7 @@ function MTcost = fy_cost(F, Y, L, V, NC, time, spiketimes, ifr, gains)
 kF = gains(1);
 kY = gains(2);
 b = gains(3);
-L0 = gains(4);
+L0 = NC.L0 + gains(4);
 
 % lambda = 0;
 ifr = ifr(spiketimes > time(1));

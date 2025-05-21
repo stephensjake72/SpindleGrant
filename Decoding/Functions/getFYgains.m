@@ -21,7 +21,7 @@ options = optimoptions('fmincon', 'Display', 'off');
 fit.kF = FYgains(1);
 fit.kdF = FYgains(2);
 fit.b = FYgains(3);
-fit.L0 = FYgains(4);
+fit.L0 = FYgains(4) + NC.L0;
 
 fit.A = NC.A;
 fit.kexp = NC.kexp;

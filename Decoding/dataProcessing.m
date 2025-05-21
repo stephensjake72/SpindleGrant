@@ -28,14 +28,14 @@ for ii = 1:numel(D)
     
     % butterworth filter design
     fsample = 1/(dsf*(data.recdata.time(2)-data.recdata.time(1)));
-    fstop = 200; % 100 Hz cutoff
+    fstop = 200; % 200 Hz cutoff
     n = 4; % 4th order
     Wn = 2*fstop/fsample;
     [b, a] = butter(n, Wn, 'low');
 
     % SG parameters
     fOrder = 2;
-    Width = 51; % 51 samples/1700 Hz ~ 30 ms
+    Width = 55; % 51 samples/1700 Hz ~ 30 ms
 
     ref = data.recdata.time;
     channels = fieldnames(data.recdata);
@@ -77,7 +77,7 @@ for ii = 1:numel(D)
         end
     end
 
-    tstart = procdata.time(find(procdata.ddLmt > 100, 1, 'first'));
+    tstart = procdata.time(find(procdata.dLmt >= 1, 1, 'first'));
     if isempty(tstart)
         continue
     end
@@ -85,12 +85,25 @@ for ii = 1:numel(D)
     procdata.spiketimes = procdata.spiketimes - tstart;
 
     procdata.Lmt = procdata.Lmt - procdata.Lmt(find(procdata.time <= 0, 1, 'last'));
-
-    if mod(ii, 5) == 0
-        figure
-        plotProcData(procdata, 'sonos')
-        % plot(procdata.time, procdata.Lmt)
-    end
+    subplot(311)
+    hold on
+    plot(procdata.time, procdata.Lmt)
+    xlim([-.5 4])
+    ax = gca;
+    subplot(312)
+    hold on
+    plot(procdata.time, procdata.dLmt)
+    xlim(ax.XAxis.Limits)
+    subplot(313)
+    hold on
+    plot(procdata.spiketimes, procdata.ifr, '.k')
+    xlim(ax.XAxis.Limits)
+    % 
+    % if mod(ii, 5) == 0
+    %     figure
+    %     plotProcData(procdata, 'sonos')
+    %     % plot(procdata.time, procdata.Lmt)
+    % end
 
     parameters = data.parameters;
     save([savedir filesep D(ii).name(1:end-4)], 'procdata', 'parameters')

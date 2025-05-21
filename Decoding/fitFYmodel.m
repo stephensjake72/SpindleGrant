@@ -36,9 +36,9 @@ for n = 1:length(NCmods)
             end
 
             % kf, ky, b, L0
-            up = [500 50 150 0.7];
-            low = [0 0 -150 0.15];
-            init = [100 10 0 0.4];
+            up = [500 50 150 0.1];
+            low = [0 0 -50 -.1];
+            init = [500 50 0 0];
 
             fyparams = [init; low; up];
             fy_fit = getFYgains(data.procdata, NC.NC, fyparams);

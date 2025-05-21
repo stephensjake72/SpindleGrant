@@ -49,6 +49,10 @@ for n = 1:length(d)
                 hold on
                 plot(plotdata.Lmt, plotdata.Fmt, 'Color', [.75 .75 .75])
                 plot(plotdata.Lmt, Fc, 'b')
+                title({['A: ' num2str(NC.A)]; ...
+                    ['k_{exp}: ' num2str(NC.kexp)]; ...
+                    ['L_0: ' num2str(NC.L0)]; ...
+                    ['k_F: ' num2str(NC.kF)]})
             end
 
             save([d(n).name '-NC.mat'], 'NC');
