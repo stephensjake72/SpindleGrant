@@ -76,7 +76,7 @@ for m = 1:5
 
         extforce = spindleforce;
         intforce = gtoforce-spindleforce;
-        intforce(intforce < 0) = 0;
+        % intforce(intforce < 0) = 0;
 
         subplot(222)
         hold on
@@ -86,8 +86,9 @@ for m = 1:5
         subplot(224)
         hold on
         plot(S(nii).time, intforce, 'Color', ycolors(m, :))
+        yline(0, '--')
         xlim([-.1 1.5])
-        ylim([0 0.4])
+        ylim([-0.4 0.8])
     end
 end
 
@@ -126,7 +127,7 @@ for m = 1:5
 
         extforce = spindleforce;
         intforce = gtoforce-spindleforce;
-        intforce(intforce < 0) = 0;
+        % intforce(intforce < 0) = 0;
 
         subplot(222)
         hold on
@@ -136,8 +137,9 @@ for m = 1:5
         subplot(224)
         hold on
         plot(S(nii).time, intforce, 'Color', ycolors(m, :))
+        yline(0, '--')
         xlim([-.1 1.5])
-        ylim([0 0.4])
+        ylim([-0.4 0.8])
     end
 end
 
