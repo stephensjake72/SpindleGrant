@@ -1,47 +1,18 @@
-%% READMME
-% this is a readme to describe how to use this code to reproduce the
-% results for the paper by Stephens, Ting, and Cope in the Journal of
-% Experimental Physiology 2025.
+%% README
+% The first two scripts to run are dataSorting and dataProcessing when
+% gathering new data. 
 
-% The first script to run is dataSorting.m. The data processing pipeline is
-% first to export .smr files of experiment recordings from Spike2 as .mat
-% files. The matlab code here is expecting the spike channels to be
-% pre-sorted such that the data is a vector of times and named 'Spikes' so
-% that the channel can be identified in Matlab. The dataSorting.m script is
-% expecting all the files to be in one folder, and the convention used
-% here is that one file has all the data for a single cell and all the cell
-% data from an experiment (one animal on one day) goes in an individual
-% folder. The dataSorting.m script will loop through one folder at a time
-% that is selected by the user and create a subfolder called 'recdata'
-% where it will store files for single stretches. The only processing in
-% this script is taking derivatives to identify stretch periods, these
-% derivatives are not stored as data. The end result is a collection of
-% files for individual stretches with raw data for motor displacement,
-% motor force, muscle length from sonos, time, spike times, and
-% instantaneous firing rates. It also saves a parameters file with the
-% animal number, cell number, stretch type, cell type, and stretch start
-% time within the experiment file. One note is that this script also scales
-% the sonos channel by a factor of 15, which is the scaling factor from
-% volts to mm based on previous calibration in the lab. As a note, this
-% calibration is not repeated for each experiment so absolute lengths are
-% not compared between animals and should be taken as approximations.
+% For reproducing the results in the paper by Stephens
+% JD, Ting LH and Cope TC 2025, the analysis scripts Fig2.m, Fig3.m, and
+% Fig4.m can be run independently. The first section of Fig2.m compiles
+% experimental data into structures which are already available so this
+% section can be ignored. It is recommended to run each of these scripts in
+% order. Some outputs however are purely for data visualization puposes and
+% not included in the final figures.
 
-% The next script to run is dataProcessing.m. This is the script that does
-% all the data processing. The way the script is written is admittedly
-% confusing, but it was written when analyzing a data set where some
-% experiments had sonomicrometry and others didn't so it had to account for
-% different data structures. The first step is subtracting the initial
-% sonos length. In preliminary analysis, there does not appear to be
-% change in the resting length measured by sonos apart from stretches that
-% appear right at the beginning of the trial when the muscle was being
-% stimulated via the peripheral nerve for cell identification. The next
-% step is defining the parameters for downsampling and filtering. After
-% defining these parameters the data is actually processed. The script
-% takes the time vector as a reference to identify the other
-% regularly-sampled data channels it then loops through these channels,
-% applies the filters and takes derivatives. It then trims off the NaNs
-% introduced by the sgolaydiff function and saves the data to the new
-% procdata structure. The end result is a procdata folder in the original
-% data folder with individual files of processed data for each stretch.
-% This folder serves as the data source for the rest of the analysis.
-
+% The GTO2NCparams script uses optimization to find parameters for the
+% non-contractile force model described in the paper, but these parameters
+% are already available in the data files so this script does not need to 
+% be run again. Similarly, plotCells is a data visualization script for
+% preliminary examination of data and does not need to be run to reproduce
+% the results.
