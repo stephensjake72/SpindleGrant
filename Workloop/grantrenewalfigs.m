@@ -1,0 +1,303 @@
+clc; clear; close all;
+
+load('lookuptable.mat')
+
+check1 = strcmp(T.stretchtype, 'workloop');
+check2 = T.amp == 2;
+check3 = strcmp(T.Animal, 'A100142-25-152');
+T1 = T(check1 & check2 & check3, :);
+T2 = T1;
+
+cells = unique(T1.cellnum);
+phases = [0 25 50 75];
+count = 1;
+for n = 1:length(cells)
+    T3 = T2(strcmp(T2.cellnum, cells{n}), :);
+    if height(T3) ~= 4
+        for m = 1:4
+            rows = find(T3.phase == phases(m));
+            if length(rows) > 1
+                figure('Position', [200 350 400 400])
+                for r = 1:length(rows)
+                    data = load(T3.FileAddress{rows(r)});
+                    subplot(length(rows), 1, r)
+                    plot(data.R.t, data.R.r); hold on
+                    plot(data.procdata.spiketimes, data.procdata.ifr, '.k')
+                    title(num2str(rows(r)))
+                end
+                [ind, ~] = listdlg('ListString', num2str(rows));
+                rowdelete = rows(ind);
+                T3(rowdelete, :) = [];
+                close
+            end
+        end
+    end
+    T2(count:count+3, :) = T3;
+    count = count+4;
+end
+
+T2(count:end, :) = [];
+
+%%
+clear T3
+
+close all
+
+for m = 1:length(cells)
+    subtab = T2(strcmp(T2.cellnum, cells{m}), :);
+
+    figure('Position', [0 0 1400 900])
+    figure(m)
+    dsf = 50;
+    for p = 1:4
+        data = load(subtab.FileAddress{p});
+        
+        if subtab.phase(p) == 0
+            subplot(411); plot(data.procdata.time(1:dsf:end), ...
+                data.procdata.Lmt(1:dsf:end), ...
+                'Color', [.8 .8  .8]);
+            hold on; plot(data.procdata.time(1:dsf:end), data.procdata.Lf(1:dsf:end), ...
+                'Color', 'b')
+            xline(data.procdata.act, 'Color', 'r')
+            yyaxis right; plot(data.procdata.spiketimes, data.procdata.ifr, '.k')
+            xlim([0 4.5])
+        elseif subtab.phase(p) == 25
+            subplot(412); plot(data.procdata.time(1:dsf:end), ...
+                data.procdata.Lmt(1:dsf:end), ...
+                'Color', [.8 .8  .8]);
+            hold on; plot(data.procdata.time(1:dsf:end), data.procdata.Lf(1:dsf:end), ...
+                'Color', 'b')
+            xline(data.procdata.act, 'Color', 'r')
+            yyaxis right; plot(data.procdata.spiketimes, data.procdata.ifr, '.k')
+            xlim([0 4.5])
+        elseif subtab.phase(p) == 50
+            subplot(413); plot(data.procdata.time(1:dsf:end), ...
+                data.procdata.Lmt(1:dsf:end), ...
+                'Color', [.8 .8  .8]);
+            hold on; plot(data.procdata.time(1:dsf:end), data.procdata.Lf(1:dsf:end), ...
+                'Color', 'b')
+            xline(data.procdata.act, 'Color', 'r')
+            yyaxis right; plot(data.procdata.spiketimes, data.procdata.ifr, '.k')
+            xlim([0 4.5])
+        elseif subtab.phase(p) == 75
+            subplot(414); plot(data.procdata.time(1:dsf:end), ...
+                data.procdata.Lmt(1:dsf:end), ...
+                'Color', [.8 .8  .8]);
+            hold on; plot(data.procdata.time(1:dsf:end), data.procdata.Lf(1:dsf:end), ...
+                'Color', 'b')
+            xline(data.procdata.act, 'Color', 'r')
+            yyaxis right; plot(data.procdata.spiketimes, data.procdata.ifr, '.k')
+            xlim([0 4.5])
+        end
+        sgtitle([subtab.cellid{p} ' ' subtab.celltype{p}])
+    end
+    % return
+end
+
+%%
+close all
+% ianum = 12; cell 7
+% iinum = 11; cell 6
+% ibnum = 8; cell 3
+
+iatab = T2(strcmp(T2.cellnum, '7'), :);
+iitab = T2(strcmp(T2.cellnum, '6'), :);
+ibtab = T2(strcmp(T2.cellnum, '11'), :);
+iatab = sortrows(iatab, 'phase'); 
+iitab = sortrows(iitab, 'phase'); 
+ibtab = sortrows(ibtab, 'phase');
+
+colors = [43,131,186;
+    171,221,164;
+    253,174,97]/255;
+
+lims = [-2.4 1.5 -1 12];
+
+figure(1)
+for n1 = 1:4
+    if iatab.phase(n1) == 50
+        continue
+    end
+    data = load(iatab.FileAddress{n1});
+
+
+    win = data.procdata.time > 2 & data.procdata.time < 4.5;
+    actstart = data.procdata.act(find(data.procdata.actrate > 1, 1, 'first'));
+    hold on; plot(data.procdata.Lf(win), data.procdata.Fmt(win), 'Color', [.8 .8 .8])
+    
+    t = data.procdata.time;
+    t1 = t(find(t > actstart + .53, 1, 'first'));
+    t2 = t1 + 0.01;
+    x = data.procdata.Lf;
+    y = data.procdata.Fmt;
+    x1 = x(find(t > t1, 1, 'first'));
+    x2 = x(find(t > t2, 1, 'first'));
+    y1 = y(find(t > t1, 1, 'first'));
+    y2 = y(find(t > t2, 1, 'first'));
+    arrowlength = 0.1;
+    dx = x2 - x1; dy = y2 - y1;
+
+    u = arrowlength*dx*(lims(2) - lims(1))/sqrt(dx^2 + dy^2); 
+    v = arrowlength*dy*(lims(4) - lims(1))/sqrt(dx^2 + dy^2);
+    
+    hold on; quiver(x1+.1, y1, u, v, 'Color', 'k', 'LineWidth', 1.5)
+    xlim([lims(1) lims(2)]); ylim([lims(3) lims(4)])
+
+    xint = interp1(t, x, data.procdata.spiketimes);
+    yint = interp1(t, y, data.procdata.spiketimes);
+    hold on; plot(xint, yint, 'Marker', '.', ...
+        'MarkerFaceColor', colors(1, :), ...
+        'MarkerEdgeColor', colors(1, :), ...
+        'LineStyle', 'none')
+    
+end
+
+figure(2)
+for n2 = 1:4
+    if iitab.phase(n2) == 50
+        continue
+    end
+    data = load(iitab.FileAddress{n2});
+
+    actstart = data.procdata.act(find(data.procdata.actrate > 1, 1, 'first'));
+    hold on; plot(data.procdata.Lf(win), data.procdata.Fmt(win), 'Color', [.8 .8 .8])
+    
+    win = data.procdata.time > 2 & data.procdata.time < 4.5;
+    t = data.procdata.time;
+    t1 = t(find(t > actstart + .535, 1, 'first'));
+    t2 = t1 + 0.01;
+    x = data.procdata.Lf;
+    y = data.procdata.Fmt;
+    x1 = x(find(t > t1, 1, 'first'));
+    x2 = x(find(t > t2, 1, 'first'));
+    y1 = y(find(t > t1, 1, 'first'));
+    y2 = y(find(t > t2, 1, 'first'));
+    arrowlength = 0.08;
+    dx = x2 - x1; dy = y2 - y1;
+
+    u = arrowlength*dx*(lims(2) - lims(1))/sqrt(dx^2 + dy^2); 
+    v = arrowlength*dy*(lims(4) - lims(1))/sqrt(dx^2 + dy^2);
+    
+    hold on; quiver(x1+.1, y1, u, v, 'Color', 'k', 'LineWidth', 1.5)
+    xlim([lims(1) lims(2)]); ylim([lims(3) lims(4)])
+
+    xint = interp1(t, x, data.procdata.spiketimes);
+    yint = interp1(t, y, data.procdata.spiketimes);
+    hold on; plot(xint, yint, 'Marker', '.', ...
+        'MarkerFaceColor', colors(2, :), ...
+        'MarkerEdgeColor', colors(2, :), ...
+        'LineStyle', 'none')
+    
+end
+
+figure(3)
+for n3 = 1:4
+    if ibtab.phase(n3) == 50
+        continue
+    end
+    data = load(ibtab.FileAddress{n3});
+
+    actstart = data.procdata.act(find(data.procdata.actrate > 1, 1, 'first'));
+    hold on; plot(data.procdata.Lf(win), data.procdata.Fmt(win), 'Color', [.8 .8 .8])
+    
+    win = data.procdata.time > 2 & data.procdata.time < 4.5;
+    t = data.procdata.time;
+    t1 = t(find(t > actstart + .53, 1, 'first'));
+    t2 = t1 + 0.01;
+    x = data.procdata.Lf;
+    y = data.procdata.Fmt;
+    x1 = x(find(t > t1, 1, 'first'));
+    x2 = x(find(t > t2, 1, 'first'));
+    y1 = y(find(t > t1, 1, 'first'));
+    y2 = y(find(t > t2, 1, 'first'));
+    arrowlength = 0.08;
+    dx = x2 - x1; dy = y2 - y1;
+
+    u = arrowlength*dx*(lims(2) - lims(1))/sqrt(dx^2 + dy^2); 
+    v = arrowlength*dy*(lims(4) - lims(1))/sqrt(dx^2 + dy^2);
+    
+    hold on; quiver(x1 + .1, y1, u, v, 'Color', 'k', 'LineWidth', 1.5)
+    xlim([lims(1) lims(2)]); ylim([lims(3) lims(4)])
+
+    xint = interp1(t, x, data.procdata.spiketimes);
+    yint = interp1(t, y, data.procdata.spiketimes);
+    hold on; plot(xint, yint, 'Marker', '.', ...
+        'MarkerFaceColor', colors(3, :), ...
+        'MarkerEdgeColor', colors(3, :), ...
+        'LineStyle', 'none')
+    
+end
+
+%%
+close all
+
+figure('Position', [0 0 1900 1000]);
+P = [1 4];
+for q = 1:length(P)
+    p = P(q);
+    iad = load(iatab.FileAddress{p});
+    iid = load(iitab.FileAddress{p});
+    ibd = load(ibtab.FileAddress{p});
+
+    x1 = iad.procdata.Lf; y1 = iad.procdata.Fmt;
+    x2 = iid.procdata.Lf; y2 = iid.procdata.Fmt;
+    x3 = ibd.procdata.Lf; y3 = ibd.procdata.Fmt;
+
+    t1 = iad.procdata.time;
+    t2 = iid.procdata.time;
+    t3 = ibd.procdata.time;
+
+    tstart = 2; tstop = 5;
+    w1 = t1 > tstart & t1 < tstop;
+    w2 = t2 > tstart & t2 < tstop;
+    w3 = t3 > tstart & t3 < tstop;
+    % 
+    % x1 = x1(w1); y1 = y1(w1);
+    % x2 = x2(w2); y2 = y2(w2);
+    % x3 = x3(w3); y3 = y3(w3);
+
+    st1 = iad.procdata.spiketimes(iad.procdata.spiketimes > tstart & ...
+        iad.procdata.spiketimes < tstop);
+    st2 = iid.procdata.spiketimes(iid.procdata.spiketimes > tstart & ...
+        iid.procdata.spiketimes < tstop);
+    st3 = ibd.procdata.spiketimes(ibd.procdata.spiketimes > tstart & ...
+        ibd.procdata.spiketimes < tstop);
+    
+
+    x1int = interp1(t1, x1, st1);
+    y1int = interp1(t1, y1, st1);
+    x2int = interp1(t2, x2, st2);
+    y2int = interp1(t2, y2, st2);
+    x3int = interp1(t3, x3, st3);
+    y3int = interp1(t3, y3, st3);
+    
+    hold on; plot([x1' x2' x3'], [y1', y2' y3'], 'Color', [.8 .8 .8])
+    plot(x1int, y1int, 'Marker', '.', ...
+        'MarkerFaceColor', colors(1, :), ...
+        'MarkerEdgeColor', colors(1, :), ...
+        'LineStyle', 'none')
+    plot(x2int, y2int, 'Marker', '.', ...
+        'MarkerFaceColor', colors(2, :), ...
+        'MarkerEdgeColor', colors(2, :), ...
+        'LineStyle', 'none')
+    plot(x3int, y3int, 'Marker', '.', ...
+        'MarkerFaceColor', colors(3, :), ...
+        'MarkerEdgeColor', colors(3, :), ...
+        'LineStyle', 'none')
+    legend({'', 'Ia', 'II', 'Ib'})
+end
+
+%%
+iadata(1) = load(iatab.FileAddress{1});
+ibdata(1) = load(ibtab.FileAddress{1});
+
+
+subplot(231); plot(iadata(1).procdata.time, iadata(1).procdata.Lmt)
+subplot(234); plot(ibdata(1).procdata.time, ibdata(1).procdata.Lmt)
+
+subplot(232); plot(iadata(1).procdata.time, iadata(1).procdata.Fmt),
+hold on; xline(iadata(1).procdata.act, 'Color', [254,224,139]/255, ...
+    'Alpha', .1)
+subplot(235); plot(ibdata(1).procdata.time, ibdata(1).procdata.Fmt)
+hold on; xline(iadata(1).procdata.act, 'Color', [254,224,139]/255, ...
+    'Alpha', .1)

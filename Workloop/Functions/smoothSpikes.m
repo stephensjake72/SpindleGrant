@@ -1,0 +1,69 @@
+function R = smoothSpikes(data, wf, minFreq)
+raster = genspiketrain(data); % create binary 'raster' signal
+t = data.procdata.time;
+
+% create isi vector
+interval = 0.01*ones(size(raster));
+si = find(raster == 1); % spike indices
+
+thr = 0.05;
+for n = 1:length(si) - 1
+    if si(n+1) - si(n) <= thr
+        interval(si(n):si(n+1)) = t(si(n+1)) - t(si(n));
+    else
+        % disp(si)
+        stop = find(t < t(si(n)) + thr, 1, 'last');
+        start = find(t > t(si(n)) - thr, 1, 'first');
+        % disp(stop)
+        interval(start:stop) = t(si(n+1)) - t(si(n));
+    end
+end
+% upbound = 0.1;
+% interval(interval > upbound) = upbound;
+
+% time shift and smooth isi vector
+% shift = 30; % n samples for shift
+% int1 = interval;
+% int2 = interval;
+% int2(1:end-shift) = int1(shift+1:end);
+% int3 = (smooth(int1, shift) + smooth(int2, shift))/2;
+int1 = interval;
+int3 = smooth(int1, 200);
+
+% create signal matrix and time constant vector
+x = minFreq:.005:-1.5;
+S = 10.^x;
+Z = zeros(length(S), length(t));
+% fill signal matrix
+for m = 1:length(S)
+    f = genfilter(t, S(m), 'gaussian');
+    z0 = conv(raster, f, 'full');
+    start = floor(length(f)/2);
+    stop = start + length(t);
+    Z(m, :) = z0(start:stop-1);
+end
+
+% use weighted avg
+row = zeros(size(t));
+r = zeros(size(t));
+F = zeros(size(t));
+for p = 1:length(t) % loop through time
+    % pick the filter width based on the isi at time point p
+    [~, row(p)] = min(abs(int3(p) - S)); 
+    % save the filter width to a vector to track
+    F(p) = S(row(p));
+    % generate vector of weights
+    w = genweights(length(S), wf, row(p));
+    if abs(sum(w) - 1) > 0.001
+        disp(w)
+        error('weight sum =/= 1')
+    end
+    r(p) = dot(Z(:, p), w);
+end
+
+R.t = t;
+R.raster = raster;
+R.interval = int1;
+R.filtertau = F;
+R.Z = Z;
+R.r = r;

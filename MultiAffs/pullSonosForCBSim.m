@@ -16,6 +16,7 @@ D = D(3:end);
 numtrials = 1e3;
 numsamples = 55000;
 LF = zeros(numtrials, numsamples);
+LMT = zeros(numtrials, numsamples);
 TIME = zeros(numtrials, numsamples);
 stretchv = zeros(1, numtrials);
 count = 1;
@@ -73,6 +74,7 @@ for ii = 2:length(D)
         % filter 
 
         LF(count, :) = Lf(keep);
+        LMT(count, :) = Lmt3(keep);
         TIME(count, :) = t(keep) - tstart;
         stretchv(count) = floor(mean(dLmt2(dLmt2 > .9*max(dLmt2))));
         count = count + 1;
@@ -84,6 +86,7 @@ for ii = 2:length(D)
 end
 
 LF(count:end, :) = [];
+LMT(count:end, :) = [];
 TIME(count:end, :) = [];
 stretchv(count:end) = [];
 
@@ -93,6 +96,7 @@ plot(TIME', LF')
 % average over each velocity value
 vvals = unique(stretchv);
 rampsample.dLf = zeros(length(vvals), length(TIME)/10 - 11);
+rampsample.dLmt = zeros(length(vvals), length(TIME)/10 - 11);
 for vnum = 1:length(vvals)
     rownums = find(stretchv == vvals(vnum));
     tempmat = LF(rownums, 1:10:end);

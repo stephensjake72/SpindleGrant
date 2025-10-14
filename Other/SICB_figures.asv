@@ -170,7 +170,7 @@ xlabel('\Delta L_{MTU}'); set(gca, 'Box', 'off');
 subplot(4, 5, [4  5 9 10 14 15 19 20]); plot(iadata(nia).procdata.Lf, iadata(nia).procdata.Fmt, ...
     'Color', [.8 .8 .8])
 hold on; plot(ibdata(nib).procdata.Lf, ibdata(nib).procdata.Fmt, 'Color', [.8 .8 .8])
-plot(x2, y2, '.r'); plot(x4, y4, '.b'); legend({'', '', 'Ia spiketimes', 'Ib spiketimes'})
+plot(x2, y2, '.r'); plot(x4, y4, '.b'); legend({'', 'Ia spiketimes', 'Ib spiketimes'})
 xlabel('\Delta L_{Fas}'); set(gca, 'Box', 'off');
 
 print('/Users/jacobstephens/Documents/Data/grantrenewalFig4', '-depsc2')

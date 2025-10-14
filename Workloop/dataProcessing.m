@@ -5,18 +5,17 @@ clc; clear; close all
 addpath(genpath('Functions'))
 
 % Load data files
-path = uigetdir('/Volumes/labs/ting/shared_ting/Jake/MultiAffs_mat');
-D = dir(path);
-savedir = [path(1:find(path == filesep, 1, 'last')) 'procdata'];
-% if ~exist(savedir, 'dir')
-%     mkdir(savedir)
-% end
-
+path = uigetdir('/Users/jacobstephens/Documents/Data/Workloop/', 'Animal folder');
+D = dir([path filesep 'recdata']);
+savedir = [path filesep 'procdata'];
 D = D(3:end);
 %%
 close all
 % loop through experiment files
 for ii = 1:numel(D)
+    if ~contains(D(ii).name, '.mat')
+        continue
+    end
     disp(ii)
     data = load([D(ii).folder filesep D(ii).name]);
     
@@ -24,7 +23,7 @@ for ii = 1:numel(D)
     data.recdata.Lf = data.recdata.Lf - data.recdata.Lf(1);
 
     % downsampling factor
-    dsf = 10;
+    dsf = 1;
     
     % butterworth filter design
     fsample = 1/(dsf*(data.recdata.time(2)-data.recdata.time(1)));
@@ -35,7 +34,7 @@ for ii = 1:numel(D)
 
     % SG parameters
     fOrder = 2;
-    Width = 55; % 51 samples/1700 Hz ~ 30 ms
+    Width = 201; % 51 samples/1700 Hz ~ 30 ms
 
     ref = data.recdata.time;
     channels = fieldnames(data.recdata);
@@ -77,38 +76,52 @@ for ii = 1:numel(D)
         end
     end
 
-    tstart = procdata.time(find(procdata.dLmt >= 1, 1, 'first'));
+    tstart = procdata.time(find(abs(procdata.dLmt) >= 0.75, 1, 'first')); % 450 low
     if isempty(tstart)
         continue
     end
     procdata.time = procdata.time - tstart;
     procdata.spiketimes = procdata.spiketimes - tstart;
+    procdata.act = data.recdata.act - tstart; 
 
     procdata.Lmt = procdata.Lmt - procdata.Lmt(find(procdata.time <= 0, 1, 'last'));
-    subplot(311)
-    hold on
-    plot(procdata.time, procdata.Lmt)
-    xlim([-.5 4])
-    ax = gca;
-    subplot(312)
-    hold on
-    plot(procdata.time, procdata.dLmt)
-    xlim(ax.XAxis.Limits)
-    subplot(313)
-    hold on
-    plot(procdata.spiketimes, procdata.ifr, '.k')
-    xlim(ax.XAxis.Limits)
+    % subplot(311)
+    % hold on
+    % plot(procdata.time, procdata.Lmt)
+    % xlim([-.5 4])
+    % ax = gca;
+    % subplot(312)
+    % hold on
+    % plot(procdata.time, procdata.dLmt)
+    % xlim(ax.XAxis.Limits)
+    % subplot(313)
+    % hold on
+    % plot(procdata.spiketimes, procdata.ifr, '.k')
+    % xlim(ax.XAxis.Limits)
     % 
     % if mod(ii, 5) == 0
     %     figure
     %     plotProcData(procdata, 'sonos')
     %     % plot(procdata.time, procdata.Lmt)
     % end
+    if strcmp(data.parameters.type, 'workloop')
+        figure
+        plot(procdata.time, procdata.Fmt)
+        hold on; plot(data.recdata.act, zeros(size(data.recdata.act)), 'xr')
+        plot(procdata.act, zeros(size(procdata.act)), '|g')
+        yyaxis right; plot(procdata.time, procdata.Lmt)
+        xlim([-.5 6])
+    end
 
     parameters = data.parameters;
+    % break
     save([savedir filesep D(ii).name(1:end-4)], 'procdata', 'parameters')
 end
 
 %%
-run('appendStretchV.m')
-run('appendFreq.m')
+% run('appendStretchV.m')
+% run('appendFreq.m')
+run('appendAmp.m')
+run('appendPhase.m')
+run('appendSmoothSpikes.m')
+run('writelookuptable.m')

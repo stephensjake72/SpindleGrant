@@ -1,108 +1,119 @@
 % Data Sorting
 % Author: JDS
-% Updated: 
-
-clear
-clc
-close all
+% Updated: 2.20.2025
+% The purpose of this script is to go through the data exported from Spike2
+% and put them in the proper format for analysis.
+% The code is currently written for protocol A100142
+clear; clc; close all
 addpath(genpath('Functions'))
 
 % Load data files
-path = '/Volumes/labs/ting/shared_ting/Jake/Workloop/';
-source = uigetdir(path);
-
-savedir = [source filesep 'recdata'];
-
-if ~exist(savedir, 'dir')
-    mkdir(savedir)
-end
-
-D = dir(source);
+% source = '/Volumes/labs/ting/shared_ting/Jake/Workloop';
+source = '/Users/jacobstephens/Documents/Data/Workloop';
+path = uigetdir(source);
+D = dir(path);
+D = D(3:end);
+savedir = [path filesep 'recdata'];
 %%
-for n = 1:length(D) %7
-    if ~contains(D(n).name, '.mat')
+close all
+for ii = 1:numel(D)
+    if ~contains(D(ii).name, '.mat')
         continue
     end
-    disp(D(n).name)
-    data = load([D(n).folder filesep D(n).name]);
+    % disp(D(ii).name)
+    data = load([D(ii).folder filesep D(ii).name]);
     
     % PARAMETER EXTRACTION
-    breaks = find(D(n).name == '-');
-    parameters.Animal = D(n).name(1:breaks(3)-1)
-    parameters.cellnum = D(n).name(breaks(4)+1:breaks(5)-1)
-    parameters.celltype = D(n).name(breaks(5)+1:breaks(6)-1);
+    breaks = find(D(ii).name == '-' | D(ii).name == '_' |D(ii).name == ' ');
+    parameters.ID = D(ii).name(1:breaks(3)-1);
+    parameters.cell = D(ii).name(breaks(4)+1:breaks(5)-1);
     
-    % % NUMERICAL DATA EXTRACTION
-    Lmt = data.motor_L.values;
-    time = data.motor_L.times;
-    Fmt = data.motor_F.values;
-    Lf = data.SONOS.values;
-    spiketimes = data.Spikes.times;
-    acttimes = data.event.times;
+    parameters.aff = D(ii).name(breaks(5)+1:end-4);
+    % parameters
 
-    % PARSE STRETCHES
-    [startTimes, stopTimes] = findIntervals(time, Lmt);
+    % NUMERICAL DATA EXTRACTION
+    Fmt = data.motor_F.values;
+    Lmt = 2*data.motor_L.values;
+    if isfield(data, 'SONOS')
+        Lf = 15*data.SONOS.values;
+    end
+    if isfield(data, 'Spikes')
+        spiketimes = data.Spikes.times;
+    else
+        continue
+    end
+    ifr = spikes2ifr(spiketimes);
+    time = data.motor_F.times;
+    if isfield(data, 'event2')
+        act = data.event2.times;
+    else
+        act = data.event.times;
+    end
+    actrate = spikes2ifr(act);
     
-    %SAVE INDIVIDUAL STRETCH TRIALS
+     % find stretch periods
+    [~, vmt, ~] = sgolaydiff(Lmt, 2, 501); % take the MTU velocity
+    vmt = vmt/data.motor_L.interval; % divide by sampling rate
+    vthr = 2.5; % set a velocity threshold to determine stretch periods
+    stretchtimes = time(abs(vmt) > vthr);
+    stretchint = stretchtimes(2:end) - stretchtimes(1:end - 1); % find the intervals between stretch
+    startinds = find(stretchint > 1.2); % take the intervals that are >1.5s
+    startTimes = [stretchtimes(1); stretchtimes(startinds+1)] - 0.75; % convert to time points corresponding with the start of a stretch
+    stopTimes = [stretchtimes(startinds); stretchtimes(end)] + 0.75; % time pts corresponding to end of stretch
+    
+    % plot to check if needed
+    % figure('Position', [0 500 1900 500])
+    % plot(time, vmt)
+    % hold on
+    % plot(startTimes, zeros(numel(startTimes), 1), 'xg')
+    % plot(stopTimes, zeros(numel(stopTimes), 1), 'xr')
+    % hold off
+
+    % loop through stretch periods to segment trials
     for jj = 1:numel(startTimes)
 
         % create time window
         win = time > startTimes(jj) & time < stopTimes(jj);
-        % segment data accordingly
+
+        % save the recorded data in the time window
         recdata.Lmt = Lmt(win);
-        recdata.Lmt = recdata.Lmt - recdata.Lmt(1);
-        recdata.Lf = Lf(win);
-        recdata.Lf = recdata.Lf - recdata.Lf(1);
         recdata.Fmt = Fmt(win);
         recdata.time = time(win) - startTimes(jj);
+        recdata.Lf = Lf(win);
 
-        % redo for spiketimes
         spikewin = spiketimes > startTimes(jj) & spiketimes < stopTimes(jj);
         recdata.spiketimes = spiketimes(spikewin) - startTimes(jj);
-        recdata.ifr = spikes2ifr(recdata.spiketimes);
+        recdata.ifr = ifr(spikewin);
 
-        % redo for activation
-        actwin = acttimes > startTimes(jj) & acttimes < stopTimes(jj);
-        recdata.acttimes = acttimes(actwin) - startTimes(jj);
-        recdata.actrate = spikes2ifr(recdata.acttimes);
+        actwin = act > startTimes(jj) & act < stopTimes(jj);
+        recdata.act = act(actwin) - startTimes(jj);
+        recdata.actrate = actrate(actwin);
 
-        figure('Position', [0 0 800 800])
-        subplot(411)
-        plot(recdata.time, recdata.Lmt, recdata.time, recdata.Lf)
-        ax = gca;
-        subplot(412)
-        plot(recdata.time, recdata.Fmt)
-        xlim(ax.XAxis.Limits)
-        subplot(413)
-        plot(recdata.spiketimes, recdata.ifr, '.k')
-        xlim(ax.XAxis.Limits)
-        subplot(414)
-        plot(recdata.acttimes, recdata.actrate, '.r')
-        xlim(ax.XAxis.Limits)
+        figure('Position', [0 100 600 800])
+        subplot(411); plot(recdata.time, recdata.Lmt);
+            yyaxis right; plot(recdata.act, recdata.actrate, '.r')
+        subplot(412); plot(recdata.time, recdata.Lf - recdata.Lf(1))
+        subplot(413); plot(recdata.time, recdata.Fmt)
+            ax = gca;
+        subplot(414); plot(recdata.spiketimes, recdata.ifr, '.k')
+            xlim(ax.XAxis.Limits)
 
-        % pull up dialog box to save the file or not
-        textstr = {'ramp', 'triangle', 'sine', 'workloop', 'discard'};
-        [index, ~] = listdlg('ListString', textstr);
-        if isempty(index)
-            break
-        elseif index == 5
-            close
+        liststr = {'ramp', 'triangle', 'sine', 'workloop', 'skip'};
+        [a, b] = listdlg('ListString', liststr);
+        close
+        % disp([a b])
+        if a == 5
             continue
         else
-            choice = textstr{index};
+            parameters.type = liststr{a};
         end
 
-        parameters.type = choice;
-        parameters.startT = floor(startTimes(jj));
-
-        savename = [D(n).name(1:end-4) '_' choice '_' num2str(parameters.startT) 's.mat'];
-        save([savedir filesep savename], 'recdata', 'parameters')
-    % 
-        close
+        parameters.startTime = startTimes(jj);
+        savename = [D(ii).name(1:end-4) '_' parameters.type '_' num2str(floor(startTimes(jj))) 's.mat'];
+        save([savedir filesep savename], 'parameters', 'recdata')
+        disp(savename)
+        clear index
     end
-
-    clear parameters
-    clear recdata
-    close all
-    
+    % disp(D(ii).name)
+    % parameters
 end

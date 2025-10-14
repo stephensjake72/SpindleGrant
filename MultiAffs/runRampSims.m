@@ -68,7 +68,7 @@ delta_f_activated(1,1) = 0.3;
 % the following is what actually defines the activation for the models
 
 % active tonic
-% sarcE.act = [(sarcE.initial_act/100)*ones(1,pertStart-500) (sarcE.activating_act/100)*ones(1,numel(t)-(pertStart-500))];
+sarcE.act = [(sarcE.initial_act/100)*ones(1,pertStart-500) (sarcE.activating_act/100)*ones(1,numel(t)-(pertStart-500))];
 shift = pertStart;
 sarcC.act = [(sarcC.initial_act/100)*ones(1,pertStart-shift) (sarcC.activating_act/100)*ones(1,numel(t)-(pertStart-shift))];
 sarcB.act = [(sarcB.initial_act/100)*ones(1,pertStart-shift) (sarcB.activating_act/100)*ones(1,numel(t)-(pertStart-shift))];
@@ -78,13 +78,14 @@ sarcB.act = [(sarcB.initial_act/100)*ones(1,pertStart-shift) (sarcB.activating_a
 % pCatoAct = pCatoActFromSimForSpindle(parms, sarcE, sarcB, sarcC);
 pCatoAct=load('ActivationCurve20240408.mat');
 
-% sarcE.pCa = interp1(pCatoAct.fracBoundNormE,pCatoAct.pCaList,sarcE.act);
+sarcE.pCa = interp1(pCatoAct.fracBoundNormE,pCatoAct.pCaList,sarcE.act);
 sarcC.pCa = interp1(pCatoAct.fracBoundNormC,pCatoAct.pCaList,sarcC.act);
 sarcB.pCa = interp1(pCatoAct.fracBoundNormB,pCatoAct.pCaList,sarcB.act);
 
 %% muscles generate force
 
 delta_cdlI = zeros(numSims, length(rampsample.dLf)+1);
+delta_cdlE = zeros(numSims, length(rampsample.dLf)+1);
 
 for a = 1:numSims
 
